@@ -6,7 +6,7 @@ export async function postVisit(req, res) {
     const clientIp = req.ip;
     const url = req.body?.url;
     const lang = req.body?.lang;
-    const referer = req.body?.referer;
+    const origin = req.body?.origin;
     if(clientIp && userAgent && url){
         const visit = await Visit.create({
             ip: clientIp,
