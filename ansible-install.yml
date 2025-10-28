@@ -1,0 +1,75 @@
+- hosts: localhost
+  become: yes
+  tasks:
+
+  - name: Remove a container
+    docker_container:
+      name: lasback
+      keep_volumes: true
+      state: absent
+
+  - name: Create lasback data folder
+    file:
+      path: /data/lasback/docker
+      state: directory
+
+  - name: Create lasback volume
+    community.docker.docker_volume:
+      name: lasback_data
+
+  - name: Delete Dockerfile
+    file:
+      path: /data/lasback/docker/Dockerfile
+      state: absent
+
+  - name: Write docker file
+    ansible.builtin.blockinfile:
+      path: /data/lasback/docker/Dockerfile
+      create: true
+      mode: a+rwx
+      block: |
+        FROM node:22.14-alpine3.21
+        RUN apk update
+        RUN apk add wget
+        RUN mkdir -p /opt/lasback
+        WORKDIR /opt/lasback/
+        RUN wget https://github.com/Zombitch/lasback/archive/refs/heads/main.zip
+        RUN unzip main.zip && rm -f main.zip
+        WORKDIR /opt/lasback/lasback-main
+        RUN echo "NODE_ENV=production" >> .env
+        RUN echo "PORT=4000" >> .env
+        RUN echo "CORS_ALLOWED_ORIGINS={{ cors }}" >> .env
+        RUN echo "API_KEYS={{ apikeys }}" >> .env
+        RUN echo "MONGO_URI={{ mongoURI }}" >> .env
+        RUN npm i
+        EXPOSE 4000
+        CMD ["npm","run","dev"]
+      state: present
+
+  - name: Delete previous image
+    community.docker.docker_image:
+      name: lasback
+      state: absent
+      force_absent: true
+
+  - name: Create the image
+    community.docker.docker_image:
+      name: lasback
+      source: build
+      build:
+        path: /data/lasback/docker
+
+  - name: Run container
+    community.docker.docker_container:
+      container_default_behavior: no_defaults
+      name: lasback
+      image: lasback
+      hostname: "{{ host }}"
+      state: started
+      restart_policy: always
+      exposed_ports :
+        - 4000
+      volumes:
+        - lasback_data:/opt/lasback/lasback-main
+      networks:
+        - name: "{{ network }}"

@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+logs/
+*.log
+npm-debug.log*
+
+# OS/editor junk
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
+coverage/
