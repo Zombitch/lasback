@@ -1,4 +1,3 @@
-import { config } from '../../utils/configLoader.js';
 import { Visit } from './visit.model.js'
 
 export async function postVisit(req, res) {

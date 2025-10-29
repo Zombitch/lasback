@@ -2,7 +2,7 @@ import http from 'http';
 import app from './app.js';
 import { config } from './utils/configLoader.js';
 import { logger } from './utils/logger.js';
-import { connectMongo } from './utils/mongo.js';
+import { connectMongo, disconnectMongo } from './utils/mongo.js';
 
 // trust proxy can matter if you're behind reverse proxy / load balancer
 app.set('trust proxy', 1);
@@ -28,9 +28,15 @@ process.on('uncaughtException', (err) => {
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  logger.info('Received SIGINT. Closing Mongo connection...');
-  await disconnectMongo();
-  process.exit(0);
+  try {
+    logger.info('Received SIGINT. Closing Mongo connection...');
+    await disconnectMongo();
+    logger.info('Mongo disconnected, exiting.');
+    process.exit(0);
+  } catch (err) {
+    logger.error({ err }, 'Error during shutdown');
+    process.exit(1);
+  }
 });
 
 process.on('SIGTERM', async () => {

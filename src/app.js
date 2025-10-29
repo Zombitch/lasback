@@ -1,4 +1,6 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -15,9 +17,19 @@ import { apiKeyAuth } from './middlewares/apiKeyAuth.js';
 import { checkOriginAllowed } from './middlewares/checkOriginAllowed.js';
 
 import healthRouter from './routes/health/health.route.js';
+import dashboardRouter from './routes/dashboard/dashboard.route.js';
 import visitRouter from './routes/visit/visit.route.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
+
+app.use(express.static(path.join(__dirname, 'public')));
+app.set('view engine', 'ejs');
+app.set('views', [
+  path.join(__dirname, 'routes/dashboard')
+]);
 
 /**
  * Logging (must be first so we see all requests, even ones that 4xx/5xx early)
@@ -112,6 +124,7 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
  * Routes
  */
 app.use('/health', healthRouter);
+app.use('/dashboard', dashboardRouter);
 
 /**
  * Api Key setted up for next route

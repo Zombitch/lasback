@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Visits Log</title>
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <h1>Visits Log</h1>
+  <div class="total">Total Visits: <%= visits.length %></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>IP</th>
+        <th>Agent</th>
+        <th>URL</th>
+        <th>Origin</th>
+        <th>Lang</th>
+        <th>Visited At</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (visits.length === 0) { %>
+        <tr>
+          <td colspan="7" style="text-align:center; padding:1rem; color:#6b7280;">
+            No visits yet
+          </td>
+        </tr>
+      <% } else { %>
+        <% visits.forEach((v, i) => { %>
+          <tr>
+            <td><%= i + 1 %></td>
+            <td><%= v.ip || '-' %></td>
+            <td class="small"><%= v.agent || '-' %></td>
+            <td><%= v.url || '-' %></td>
+            <td><%= v.origin || '-' %></td>
+            <td><%= v.lang || '-' %></td>
+            <td class="timestamp"><%= v.createdAt.toLocaleString() %></td>
+          </tr>
+        <% }) %>
+      <% } %>
+    </tbody>
+  </table>
+
+  <footer>
+    Lux Anima Studio © <%= new Date().getFullYear() %>
+  </footer>
+</body>
+</html>
