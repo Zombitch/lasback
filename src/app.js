@@ -17,6 +17,7 @@ import { apiKeyAuth } from './middlewares/apiKeyAuth.js';
 import { checkOriginAllowed } from './middlewares/checkOriginAllowed.js';
 
 import healthRouter from './routes/health/health.route.js';
+import homeRouter from './routes/home/home.route.js';
 import dashboardRouter from './routes/dashboard/dashboard.route.js';
 import visitRouter from './routes/visit/visit.route.js';
 import analyticsRouter from './routes/analytics/analytics.route.js';
@@ -29,7 +30,8 @@ const app = express();
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', [
-  path.join(__dirname, 'routes/dashboard')
+  path.join(__dirname, 'routes/home'),
+  path.join(__dirname, 'routes/dashboard'),
 ]);
 
 /**
@@ -124,6 +126,7 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 /**
  * Routes
  */
+app.use('/', homeRouter);
 app.use('/health', healthRouter);
 app.use('/dashboard', dashboardRouter);
 

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lux Anima Studio — Back Office</title>
+  <link rel="stylesheet" href="/css/dashboard.css" />
+  <style>
+    /* ── Reset & base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      padding: 0;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #0a1024;
+      color: #e2e8f0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Top bar ────────────────────────────────────────────────── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 56px;
+      background: #060d1c;
+      border-bottom: 1px solid #1e2d4a;
+      flex-shrink: 0;
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .topbar-brand svg {
+      width: 26px;
+      height: 26px;
+      color: #5B8CFF;
+      flex-shrink: 0;
+    }
+
+    .topbar-brand-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      letter-spacing: 0.02em;
+    }
+
+    .topbar-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #5B8CFF;
+      background: rgba(91, 140, 255, 0.12);
+      border: 1px solid rgba(91, 140, 255, 0.3);
+      border-radius: 4px;
+      padding: 0.15rem 0.5rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .topbar-env {
+      font-size: 0.7rem;
+      color: #64748b;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Hero ───────────────────────────────────────────────────── */
+    .hero {
+      padding: 3rem 2rem 2rem;
+      text-align: center;
+    }
+
+    .hero-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #1a2a5e 0%, #0d1636 100%);
+      border: 1px solid #2a3f7a;
+      border-radius: 16px;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 0 32px rgba(91, 140, 255, 0.15);
+    }
+
+    .hero-logo svg {
+      width: 34px;
+      height: 34px;
+      color: #5B8CFF;
+    }
+
+    .hero h1 {
+      margin: 0 0 0.4rem;
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #f1f5f9;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-sub {
+      color: #64748b;
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    /* ── Stats strip ────────────────────────────────────────────── */
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 0 2rem 2rem;
+      justify-content: center;
+    }
+
+    .stat-card {
+      background: #0f1a30;
+      border: 1px solid #1e2d4a;
+      border-radius: 10px;
+      padding: 1rem 1.5rem;
+      min-width: 150px;
+      text-align: center;
+      flex: 1 1 150px;
+      max-width: 200px;
+    }
+
+    .stat-card-num {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #5B8CFF;
+      line-height: 1.1;
+      display: block;
+    }
+
+    .stat-card-label {
+      font-size: 0.7rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 0.3rem;
+      display: block;
+    }
+
+    .stat-card-delta {
+      font-size: 0.72rem;
+      color: #22c55e;
+      margin-top: 0.25rem;
+      display: block;
+    }
+
+    .stat-card.uptime .stat-card-num {
+      font-size: 1.1rem;
+      color: #22c55e;
+    }
+
+    .stat-card.uptime .stat-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      background: #22c55e;
+      border-radius: 50%;
+      margin-right: 5px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── Divider ────────────────────────────────────────────────── */
+    .section-label {
+      padding: 0 2rem 0.75rem;
+      font-size: 0.7rem;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    /* ── Nav cards ──────────────────────────────────────────────── */
+    .nav-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+      padding: 0 2rem 2.5rem;
+    }
+
+    .nav-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      background: #0f1a30;
+      border: 1px solid #1e2d4a;
+      border-radius: 10px;
+      padding: 1.25rem 1.25rem;
+      transition: border-color 0.15s, background 0.15s, transform 0.12s;
+      cursor: pointer;
+    }
+
+    .nav-card:hover {
+      border-color: #5B8CFF;
+      background: #111f3a;
+      transform: translateY(-2px);
+    }
+
+    .nav-card-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    .nav-card-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .nav-card-icon.blue  { background: rgba(91, 140, 255, 0.12); color: #5B8CFF; }
+    .nav-card-icon.teal  { background: rgba(20, 184, 166, 0.12);  color: #14b8a6; }
+    .nav-card-icon.green { background: rgba(34, 197, 94, 0.12);   color: #22c55e; }
+    .nav-card-icon.amber { background: rgba(245, 158, 11, 0.12);  color: #f59e0b; }
+
+    .nav-card-body {}
+
+    .nav-card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      margin: 0 0 0.2rem;
+    }
+
+    .nav-card-desc {
+      font-size: 0.78rem;
+      color: #64748b;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .nav-card-url {
+      font-size: 0.68rem;
+      color: #334155;
+      margin-top: 0.4rem;
+      font-family: monospace;
+    }
+
+    /* ── Footer ─────────────────────────────────────────────────── */
+    footer {
+      margin-top: auto;
+      text-align: center;
+      padding: 1.5rem;
+      color: #334155;
+      font-size: 0.75rem;
+      border-top: 1px solid #0f1a30;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <!-- Flame / studio icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+        <path d="M12 6v6l4 2"/>
+      </svg>
+      <span class="topbar-brand-name">Lux Anima Studio</span>
+      <span class="topbar-badge">Back Office</span>
+    </div>
+    <span class="topbar-env"><%= env %></span>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-logo">
+      <!-- Diamond / gem icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+        <line x1="12" y1="2" x2="12" y2="22"/>
+        <path d="M2 8.5h20"/>
+      </svg>
+    </div>
+    <h1>Lux Anima Studio</h1>
+    <p class="hero-sub">Tableau de bord — administration & analytics</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <span class="stat-card-num"><%= totalVisits.toLocaleString('fr-FR') %></span>
+      <span class="stat-card-label">Visites totales</span>
+      <span class="stat-card-delta">+<%= recentVisits %> dernières 24h</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-card-num"><%= totalEvents.toLocaleString('fr-FR') %></span>
+      <span class="stat-card-label">Events analytics</span>
+      <span class="stat-card-delta">+<%= recentEvents %> dernières 24h</span>
+    </div>
+    <div class="stat-card uptime">
+      <span class="stat-card-num"><span class="stat-dot"></span><%= uptime %></span>
+      <span class="stat-card-label">Uptime serveur</span>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="section-label">Navigation</div>
+  <div class="nav-grid">
+
+    <a href="/dashboard/visits" class="nav-card">
+      <div class="nav-card-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <p class="nav-card-title">Statistiques de visites</p>
+        <p class="nav-card-desc">Trafic mensuel par année avec graphiques en barres</p>
+        <p class="nav-card-url">/dashboard/visits</p>
+      </div>
+    </a>
+
+    <a href="/dashboard/visits-details" class="nav-card">
+      <div class="nav-card-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8"  y1="2" x2="8"  y2="6"/>
+          <line x1="3"  y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <p class="nav-card-title">Détail des visites</p>
+        <p class="nav-card-desc">Journal détaillé par mois — IP, agent, URL, langue</p>
+        <p class="nav-card-url">/dashboard/visits-details?year=&month=</p>
+      </div>
+    </a>
+
+    <a href="/dashboard/analytics" class="nav-card">
+      <div class="nav-card-icon teal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <p class="nav-card-title">Analytics jeux & sites</p>
+        <p class="nav-card-desc">Suivi d'événements — actions, pays, plateformes, sessions</p>
+        <p class="nav-card-url">/dashboard/analytics</p>
+      </div>
+    </a>
+
+    <a href="/health" class="nav-card">
+      <div class="nav-card-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <p class="nav-card-title">Health check</p>
+        <p class="nav-card-desc">Statut du serveur, uptime et environnement en JSON</p>
+        <p class="nav-card-url">/health</p>
+      </div>
+    </a>
+
+    <div class="nav-card" style="opacity: 0.45; cursor: default;">
+      <div class="nav-card-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.07 4.93A10 10 0 1 0 4.93 19.07"/>
+          <path d="M19.07 4.93L4.93 19.07"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <p class="nav-card-title">API — POST /analytics/event</p>
+        <p class="nav-card-desc">Envoyer un événement depuis un jeu ou un site. Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code></p>
+        <p class="nav-card-url">/analytics/event</p>
+      </div>
+    </div>
+
+    <div class="nav-card" style="opacity: 0.45; cursor: default;">
+      <div class="nav-card-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <p class="nav-card-title">API — GET /analytics/stats</p>
+        <p class="nav-card-desc">Stats agrégées filtrables par source, action, dates. Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code></p>
+        <p class="nav-card-url">/analytics/stats</p>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    Lux Anima Studio &copy; <%= year %> &mdash; Back Office v1
+  </footer>
+
+</body>
+</html>
