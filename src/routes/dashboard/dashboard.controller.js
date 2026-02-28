@@ -1,4 +1,5 @@
-import { Visit } from '../visit/visit.model.js'
+import { Visit } from '../visit/visit.model.js';
+import { Event } from '../analytics/analytics.model.js';
 
 export async function viewVisitsDetails(req, res) {
     const { year, month } = req.query;
@@ -85,6 +86,70 @@ export async function viewVisits(req, res) {
     const total = await Visit.countDocuments();
 
     res.render('dashboard-visits', { total, yearlyArray });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function viewAnalytics(req, res, next) {
+  try {
+    const { source } = req.query;
+
+    const match = {};
+    if (source) match.source = source;
+
+    const pipeline = (field) => [
+      { $match: match },
+      { $group: { _id: `$${field}`, count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 15 },
+    ];
+
+    const [
+      total,
+      bySource,
+      byAction,
+      byCountry,
+      byPlatform,
+      byCategory,
+      byDay,
+      sources,
+    ] = await Promise.all([
+      Event.countDocuments(match),
+      Event.aggregate(pipeline('source')),
+      Event.aggregate(pipeline('action')),
+      Event.aggregate(pipeline('country')),
+      Event.aggregate(pipeline('platform')),
+      Event.aggregate(pipeline('category')),
+      Event.aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+        { $limit: 30 },
+      ]),
+      // All distinct sources for filter select
+      Event.distinct('source'),
+    ]);
+
+    const maxByDay = byDay.length ? Math.max(...byDay.map((d) => d.count)) : 1;
+
+    res.render('dashboard-analytics', {
+      total,
+      bySource,
+      byAction,
+      byCountry,
+      byPlatform,
+      byCategory,
+      byDay,
+      maxByDay,
+      sources: sources.filter(Boolean).sort(),
+      activeSource: source || null,
+    });
   } catch (err) {
     next(err);
   }

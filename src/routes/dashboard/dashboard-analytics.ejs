@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Analytics Dashboard</title>
+  <link rel="stylesheet" href="/css/dashboard.css" />
+  <style>
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .analytics-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      padding: 1rem 1.25rem;
+    }
+    .analytics-card h3 {
+      margin: 0 0 0.75rem;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid #334155;
+      font-size: 0.875rem;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: #cbd5e1; }
+    .stat-count {
+      font-weight: 600;
+      color: #38bdf8;
+    }
+    .filter-bar {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin: 1rem 0;
+    }
+    .filter-bar label { color: #94a3b8; font-size: 0.875rem; }
+    .filter-bar select, .filter-bar button {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      padding: 0.35rem 0.75rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .filter-bar button { background: #0ea5e9; border-color: #0ea5e9; color: #fff; }
+    .no-data { color: #6b7280; font-size: 0.85rem; padding: 0.5rem 0; }
+    .day-chart { margin-top: 0.5rem; }
+    .chart-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; }
+    .chart-label { width: 70px; font-size: 0.7rem; color: #94a3b8; flex-shrink: 0; }
+    .chart-bar-bg { flex: 1; background: #0f172a; border-radius: 2px; height: 14px; }
+    .chart-bar-fill { background: #38bdf8; border-radius: 2px; height: 100%; min-width: 2px; }
+    .chart-count { width: 32px; text-align: right; font-size: 0.7rem; color: #cbd5e1; }
+    .total-badge {
+      display: inline-block;
+      background: #0f172a;
+      border: 1px solid #38bdf8;
+      color: #38bdf8;
+      border-radius: 2rem;
+      padding: 0.4rem 1.25rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Analytics Dashboard</h1>
+
+  <div class="total-badge">Total events: <%= total.toLocaleString() %></div>
+
+  <!-- Source filter -->
+  <form class="filter-bar" method="get" action="/dashboard/analytics">
+    <label for="source-select">Filter by source:</label>
+    <select id="source-select" name="source">
+      <option value="">All sources</option>
+      <% sources.forEach(s => { %>
+        <option value="<%= s %>" <%= activeSource === s ? 'selected' : '' %>><%= s %></option>
+      <% }) %>
+    </select>
+    <button type="submit">Apply</button>
+    <% if (activeSource) { %>
+      <a href="/dashboard/analytics" style="color:#94a3b8; font-size:0.85rem;">Clear</a>
+    <% } %>
+  </form>
+
+  <div class="analytics-grid">
+
+    <!-- Events by source -->
+    <div class="analytics-card">
+      <h3>By Source (game / site)</h3>
+      <% if (bySource.length === 0) { %>
+        <div class="no-data">No data yet</div>
+      <% } else { %>
+        <% bySource.forEach(row => { %>
+          <div class="stat-row">
+            <span class="stat-label"><%= row._id || '(none)' %></span>
+            <span class="stat-count"><%= row.count %></span>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <!-- Events by action -->
+    <div class="analytics-card">
+      <h3>By Action</h3>
+      <% if (byAction.length === 0) { %>
+        <div class="no-data">No data yet</div>
+      <% } else { %>
+        <% byAction.forEach(row => { %>
+          <div class="stat-row">
+            <span class="stat-label"><%= row._id || '(none)' %></span>
+            <span class="stat-count"><%= row.count %></span>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <!-- Events by category -->
+    <div class="analytics-card">
+      <h3>By Category</h3>
+      <% if (byCategory.length === 0) { %>
+        <div class="no-data">No data yet</div>
+      <% } else { %>
+        <% byCategory.forEach(row => { %>
+          <div class="stat-row">
+            <span class="stat-label"><%= row._id || '(none)' %></span>
+            <span class="stat-count"><%= row.count %></span>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <!-- Events by country -->
+    <div class="analytics-card">
+      <h3>By Country</h3>
+      <% if (byCountry.length === 0) { %>
+        <div class="no-data">No data yet</div>
+      <% } else { %>
+        <% byCountry.forEach(row => { %>
+          <div class="stat-row">
+            <span class="stat-label"><%= row._id || '(unknown)' %></span>
+            <span class="stat-count"><%= row.count %></span>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <!-- Events by platform -->
+    <div class="analytics-card">
+      <h3>By Platform</h3>
+      <% if (byPlatform.length === 0) { %>
+        <div class="no-data">No data yet</div>
+      <% } else { %>
+        <% byPlatform.forEach(row => { %>
+          <div class="stat-row">
+            <span class="stat-label"><%= row._id || '(none)' %></span>
+            <span class="stat-count"><%= row.count %></span>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <!-- Events per day (bar chart) -->
+    <div class="analytics-card">
+      <h3>Events per Day (last 30)</h3>
+      <% if (byDay.length === 0) { %>
+        <div class="no-data">No data yet</div>
+      <% } else { %>
+        <div class="day-chart">
+          <% byDay.forEach(d => {
+               const widthPct = maxByDay > 0 ? Math.round((d.count / maxByDay) * 100) : 0;
+          %>
+            <div class="chart-row">
+              <div class="chart-label"><%= d._id.slice(5) %></div>
+              <div class="chart-bar-bg">
+                <div class="chart-bar-fill" style="width:<%= widthPct %>%"></div>
+              </div>
+              <div class="chart-count"><%= d.count %></div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+
+  </div>
+
+  <footer>
+    Lux Anima Studio © <%= new Date().getFullYear() %>
+  </footer>
+</body>
+</html>
