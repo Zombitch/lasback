@@ -2,10 +2,23 @@ import { Router } from 'express';
 import * as OTPAuth from 'otpauth';
 import QRCode from 'qrcode';
 import { Totp } from './totp.model.js';
+import { logger } from '../../utils/logger.js';
 
 const router = Router();
 
 const ISSUER = 'LuxAnimaStudio';
+const TOTP_WINDOW = 2; // ±2 time-steps (±60 s) to tolerate clock drift
+
+/**
+ * Sanitise the 6-digit code coming from the form:
+ *  - trim surrounding whitespace
+ *  - strip any inner spaces (some apps display "123 456")
+ *  - left-pad with zeros so "1234" → "001234"
+ */
+function sanitizeCode(raw) {
+  if (typeof raw !== 'string') return '';
+  return raw.trim().replace(/\s/g, '').padStart(6, '0');
+}
 
 // ─── GET /totp/setup ────────────────────────────────────────────────────────
 // Show QR code page so the user can register their authenticator app.
@@ -50,10 +63,12 @@ router.post('/setup', async (req, res, next) => {
       return res.redirect('/totp/verify');
     }
 
-    const { code } = req.body;
+    const rawCode = req.body.code;
+    const code = sanitizeCode(rawCode);
     const pendingSecret = req.session.pendingTotpSecret;
 
     if (!pendingSecret) {
+      logger.warn('[TOTP-SETUP] No pendingTotpSecret in session — redirecting to GET /setup');
       return res.redirect('/totp/setup');
     }
 
@@ -66,7 +81,23 @@ router.post('/setup', async (req, res, next) => {
       secret: OTPAuth.Secret.fromBase32(pendingSecret),
     });
 
-    const delta = totp.validate({ token: code, window: 1 });
+    const serverTime = new Date();
+    const expectedToken = totp.generate();
+    const delta = totp.validate({ token: code, window: TOTP_WINDOW });
+
+    logger.info(
+      {
+        serverTime: serverTime.toISOString(),
+        serverEpoch: Math.floor(serverTime.getTime() / 1000),
+        timeStep: Math.floor(serverTime.getTime() / 30000),
+        rawCode,
+        sanitizedCode: code,
+        expectedToken,
+        delta,
+        secretPrefix: pendingSecret.slice(0, 4) + '…',
+      },
+      '[TOTP-SETUP] Validation attempt',
+    );
 
     if (delta === null) {
       // Invalid code — re-generate QR with same secret
@@ -122,8 +153,22 @@ router.post('/verify', async (req, res, next) => {
       return res.redirect('/totp/setup');
     }
 
-    const { code } = req.body;
+    const rawCode = req.body.code;
+    const code = sanitizeCode(rawCode);
     const secrets = await Totp.find();
+
+    const serverTime = new Date();
+    logger.info(
+      {
+        serverTime: serverTime.toISOString(),
+        serverEpoch: Math.floor(serverTime.getTime() / 1000),
+        timeStep: Math.floor(serverTime.getTime() / 30000),
+        rawCode,
+        sanitizedCode: code,
+        storedSecrets: secrets.length,
+      },
+      '[TOTP-VERIFY] Verification attempt',
+    );
 
     let valid = false;
     for (const entry of secrets) {
@@ -136,7 +181,19 @@ router.post('/verify', async (req, res, next) => {
         secret: OTPAuth.Secret.fromBase32(entry.secret),
       });
 
-      const delta = totp.validate({ token: code, window: 1 });
+      const expectedToken = totp.generate();
+      const delta = totp.validate({ token: code, window: TOTP_WINDOW });
+
+      logger.info(
+        {
+          label: entry.label,
+          expectedToken,
+          delta,
+          secretPrefix: entry.secret.slice(0, 4) + '…',
+        },
+        '[TOTP-VERIFY] Checked secret',
+      );
+
       if (delta !== null) {
         valid = true;
         break;
@@ -144,10 +201,13 @@ router.post('/verify', async (req, res, next) => {
     }
 
     if (!valid) {
+      logger.warn('[TOTP-VERIFY] All secrets exhausted — code rejected');
       return res.render('totp-verify', {
         error: 'Code invalide. Veuillez réessayer.',
       });
     }
+
+    logger.info('[TOTP-VERIFY] Code accepted');
 
     req.session.totpVerified = true;
     res.redirect('/');
