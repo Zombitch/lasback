@@ -91,8 +91,10 @@ app.use(
         return callback(null, true);
       }
 
-      // reject everything else
-      return callback(new Error('Not allowed by CORS'));
+      // Don't set CORS headers for unlisted origins.
+      // The browser will block cross-origin JS reads (no Access-Control-Allow-Origin),
+      // but same-origin and form submissions still work normally.
+      return callback(null, false);
     },
     credentials: true,
   })
