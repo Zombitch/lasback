@@ -30,23 +30,43 @@ router.get('/setup', async (req, res, next) => {
       return res.redirect('/totp/verify');
     }
 
+    // Reuse the pending secret when one already lives in the session,
+    // so a second GET (browser prefetch, favicon, refresh…) does NOT
+    // overwrite the secret the user already scanned.
+    let secret;
+    if (req.session.pendingTotpSecret) {
+      secret = OTPAuth.Secret.fromBase32(req.session.pendingTotpSecret);
+      logger.debug('[TOTP-SETUP] Reusing existing pending secret from session');
+    } else {
+      secret = new OTPAuth.Secret();
+      req.session.pendingTotpSecret = secret.base32;
+      logger.debug('[TOTP-SETUP] Generated new secret');
+    }
+
     const totp = new OTPAuth.TOTP({
       issuer: ISSUER,
       label: 'admin',
       algorithm: 'SHA1',
       digits: 6,
       period: 30,
+      secret,
     });
-
-    // Store secret in session so we can verify it on POST
-    req.session.pendingTotpSecret = totp.secret.base32;
 
     const otpauthUri = totp.toString();
     const qrDataUrl = await QRCode.toDataURL(otpauthUri);
 
+    logger.info(
+      {
+        secretPrefix: secret.base32.slice(0, 4) + '…',
+        sessionSecret: req.session.pendingTotpSecret.slice(0, 4) + '…',
+        uriPreview: otpauthUri.slice(0, 60) + '…',
+      },
+      '[TOTP-SETUP] Rendering setup page',
+    );
+
     res.render('totp-setup', {
       qrDataUrl,
-      secret: totp.secret.base32,
+      secret: secret.base32,
     });
   } catch (err) {
     next(err);
@@ -72,18 +92,22 @@ router.post('/setup', async (req, res, next) => {
       return res.redirect('/totp/setup');
     }
 
+    const reconstructed = OTPAuth.Secret.fromBase32(pendingSecret);
     const totp = new OTPAuth.TOTP({
       issuer: ISSUER,
       label: 'admin',
       algorithm: 'SHA1',
       digits: 6,
       period: 30,
-      secret: OTPAuth.Secret.fromBase32(pendingSecret),
+      secret: reconstructed,
     });
 
     const serverTime = new Date();
     const expectedToken = totp.generate();
     const delta = totp.validate({ token: code, window: TOTP_WINDOW });
+
+    // Log the base32 round-trip to detect encoding mismatches
+    const roundTrippedBase32 = reconstructed.base32;
 
     logger.info(
       {
@@ -95,6 +119,7 @@ router.post('/setup', async (req, res, next) => {
         expectedToken,
         delta,
         secretPrefix: pendingSecret.slice(0, 4) + '…',
+        base32RoundTripMatch: pendingSecret === roundTrippedBase32,
       },
       '[TOTP-SETUP] Validation attempt',
     );
