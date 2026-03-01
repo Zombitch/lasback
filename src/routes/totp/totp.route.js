@@ -43,9 +43,10 @@ router.get('/setup', async (req, res, next) => {
       logger.debug('[TOTP-SETUP] Generated new secret');
     }
 
+    const env = process.env.NODE_ENV || 'development';
     const totp = new OTPAuth.TOTP({
       issuer: ISSUER,
-      label: 'admin',
+      label: env,
       algorithm: 'SHA1',
       digits: 6,
       period: 30,
@@ -92,10 +93,11 @@ router.post('/setup', async (req, res, next) => {
       return res.redirect('/totp/setup');
     }
 
+    const env = process.env.NODE_ENV || 'development';
     const reconstructed = OTPAuth.Secret.fromBase32(pendingSecret);
     const totp = new OTPAuth.TOTP({
       issuer: ISSUER,
-      label: 'admin',
+      label: env,
       algorithm: 'SHA1',
       digits: 6,
       period: 30,
