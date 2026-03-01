@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import hpp from 'hpp';
 import pinoHttp from 'pino-http';
+import session from 'express-session';
 
 import { config } from './utils/configLoader.js';
 import { logger } from './utils/logger.js';
@@ -15,10 +16,14 @@ import { notFoundHandler } from './middlewares/notFound.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { apiKeyAuth } from './middlewares/apiKeyAuth.js';
 import { checkOriginAllowed } from './middlewares/checkOriginAllowed.js';
+import { totpAuth } from './middlewares/totpAuth.js';
 
 import healthRouter from './routes/health/health.route.js';
+import homeRouter from './routes/home/home.route.js';
 import dashboardRouter from './routes/dashboard/dashboard.route.js';
+import totpRouter from './routes/totp/totp.route.js';
 import visitRouter from './routes/visit/visit.route.js';
+import analyticsRouter from './routes/analytics/analytics.route.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,7 +33,9 @@ const app = express();
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', [
-  path.join(__dirname, 'routes/dashboard')
+  path.join(__dirname, 'routes/home'),
+  path.join(__dirname, 'routes/dashboard'),
+  path.join(__dirname, 'routes/totp'),
 ]);
 
 /**
@@ -121,20 +128,42 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 /**
+ * Session (required for TOTP verification state)
+ */
+app.use(
+  session({
+    secret: config.sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: config.isProd,
+      maxAge: 24 * 60 * 60 * 1000, // 24 h
+    },
+  })
+);
+
+/**
  * Routes
  */
+
+// TOTP pages (setup & verify) are public — they handle their own access logic
+app.use('/totp', totpRouter);
+
+// Health check (JSON, no view) — no TOTP gate
 app.use('/health', healthRouter);
-app.use('/dashboard', dashboardRouter);
+
+// All view routes are protected by TOTP
+app.use('/', totpAuth, homeRouter);
+app.use('/dashboard', totpAuth, dashboardRouter);
 
 /**
  * Api Key setted up for next route
  */
 app.use(apiKeyAuth, checkOriginAllowed);
 
-/**
- * test
- */
 app.use('/visit', visitRouter);
+app.use('/analytics', analyticsRouter);
 
 /**
  * 404 handler (for unmatched routes)
