@@ -30,6 +30,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+app.locals.env = config.env;
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', [

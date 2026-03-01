@@ -1,91 +1,78 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Visits Stats by Year</title>
-  <link rel="stylesheet" href="/css/dashboard.css" />
-</head>
-<body>
-  <h1>Visits Stats by Year</h1>
-  <div class="total">Total Visits: <%= total %></div>
+<%- include('../partials/header') %>
 
-  <% if (yearlyArray.length === 0) { %>
-    <div class="no-data">
-      No visits recorded yet
-    </div>
-  <% } else { %>
+  <main class="content">
+    <h1>Visits Stats by Year</h1>
+    <div class="total">Total Visits: <%= total %></div>
 
-    <% yearlyArray.forEach((yearBlock) => { %>
-      <section class="year-block">
-        <div class="year-header">
-          <h2>Year <%= yearBlock.year %></h2>
-          <div class="note">
-            Max month in <%= yearBlock.year %>: <%= yearBlock.maxCount %> visits
+    <% if (yearlyArray.length === 0) { %>
+      <div class="no-data">No visits recorded yet</div>
+    <% } else { %>
+
+      <% yearlyArray.forEach((yearBlock) => { %>
+        <section class="year-block">
+          <div class="year-header">
+            <h2>Year <%= yearBlock.year %></h2>
+            <div class="note">
+              Max month in <%= yearBlock.year %>: <%= yearBlock.maxCount %> visits
+            </div>
           </div>
-        </div>
 
-        <div class="year-content">
-          <!-- LEFT: table -->
-          <div class="month-table-wrapper">
-            <table class="month-table">
-              <thead>
-                <tr>
-                  <th>Month</th>
-                  <th>Visits</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (yearBlock.months.length === 0) { %>
+          <div class="year-content">
+            <!-- LEFT: table -->
+            <div class="month-table-wrapper">
+              <table class="month-table">
+                <thead>
                   <tr>
-                    <td colspan="2" style="text-align:center; padding:0.75rem; color:#6b7280;">
-                      No data
-                    </td>
+                    <th>Month</th>
+                    <th>Visits</th>
                   </tr>
-                <% } else { %>
-                  <% yearBlock.months.forEach((m) => { %>
-                        <tr>           
+                </thead>
+                <tbody>
+                  <% if (yearBlock.months.length === 0) { %>
+                    <tr>
+                      <td colspan="2" style="text-align:center; padding:0.75rem; color:#6b7280;">
+                        No data
+                      </td>
+                    </tr>
+                  <% } else { %>
+                    <% yearBlock.months.forEach((m) => { %>
+                      <tr>
                         <td><a href="/dashboard/visits-details?year=<%= yearBlock.year %>&month=<%=m.monthIndex%>"> <%= m.monthName %> </a></td>
                         <td class="count-cell"><%= m.count %></td>
-                        </tr>
-                  <% }) %>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
 
-          <!-- RIGHT: bar chart -->
-          <div class="chart-wrapper">
-            <% if (yearBlock.months.length === 0) { %>
-              <div style="color:#6b7280; font-size:0.8rem;">
-                No chart data available
-              </div>
-            <% } else { %>
-              <% yearBlock.months.forEach((m) => {
-                   const widthPct = yearBlock.maxCount > 0
-                     ? Math.round((m.count / yearBlock.maxCount) * 100)
-                     : 0;
-              %>
-                <div class="chart-row">
-                  <div class="chart-label"><%= m.monthName %></div>
-                  <div class="chart-bar-bg">
-                    <div
-                      class="chart-bar-fill"
-                      style="width:<%= widthPct %>%"
-                    ></div>
-                  </div>
-                  <div class="chart-count"><%= m.count %></div>
+            <!-- RIGHT: bar chart -->
+            <div class="chart-wrapper">
+              <% if (yearBlock.months.length === 0) { %>
+                <div style="color:#6b7280; font-size:0.8rem;">
+                  No chart data available
                 </div>
-              <% }) %>
-            <% } %>
+              <% } else { %>
+                <% yearBlock.months.forEach((m) => {
+                     const widthPct = yearBlock.maxCount > 0
+                       ? Math.round((m.count / yearBlock.maxCount) * 100)
+                       : 0;
+                %>
+                  <div class="chart-row">
+                    <div class="chart-label"><%= m.monthName %></div>
+                    <div class="chart-bar-bg">
+                      <div class="chart-bar-fill" style="width:<%= widthPct %>%"></div>
+                    </div>
+                    <div class="chart-count"><%= m.count %></div>
+                  </div>
+                <% }) %>
+              <% } %>
+            </div>
           </div>
-        </div>
-      </section>
-    <% }) %>
+        </section>
+      <% }) %>
 
-  <% } %>
+    <% } %>
+  </main>
 
-  <footer>
-    Lux Anima Studio © <%= new Date().getFullYear() %>
-  </footer>
-</body>
-</html>
+<%- include('../partials/footer') %>

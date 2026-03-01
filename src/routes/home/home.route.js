@@ -37,8 +37,6 @@ router.get('/', async (_req, res, next) => {
       recentVisits,
       recentEvents,
       uptime: formatUptime(Math.floor(process.uptime())),
-      env: process.env.NODE_ENV ?? 'development',
-      year: new Date().getFullYear(),
     });
   } catch (err) {
     next(err);
