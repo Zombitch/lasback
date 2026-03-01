@@ -1,8 +1,12 @@
 <%- include('../partials/header') %>
 
   <main class="content">
-    <h1>Visits Stats by Year</h1>
-    <div class="total">Total Visits: <%= total %></div>
+    <section class="dashboard-header">
+      <p class="section-label dashboard-kicker">Traffic</p>
+      <h1>Visits Stats by Year</h1>
+      <p class="dashboard-sub">Monthly traffic blocks with yearly comparisons</p>
+      <div class="total">Total Visits: <%= total.toLocaleString('fr-FR') %></div>
+    </section>
 
     <% if (yearlyArray.length === 0) { %>
       <div class="no-data">No visits recorded yet</div>
@@ -30,14 +34,14 @@
                 <tbody>
                   <% if (yearBlock.months.length === 0) { %>
                     <tr>
-                      <td colspan="2" style="text-align:center; padding:0.75rem; color:#6b7280;">
-                        No data
-                      </td>
+                        <td colspan="2" style="text-align:center; padding:0.75rem; color:#6b7280;">
+                          No data
+                        </td>
                     </tr>
                   <% } else { %>
                     <% yearBlock.months.forEach((m) => { %>
                       <tr>
-                        <td><a href="/dashboard/visits-details?year=<%= yearBlock.year %>&month=<%=m.monthIndex%>"> <%= m.monthName %> </a></td>
+                        <td><a class="month-link" href="/dashboard/visits-details?year=<%= yearBlock.year %>&month=<%=m.monthIndex%>"><%= m.monthName %></a></td>
                         <td class="count-cell"><%= m.count %></td>
                       </tr>
                     <% }) %>

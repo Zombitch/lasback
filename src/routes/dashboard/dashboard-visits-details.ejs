@@ -1,43 +1,50 @@
 <%- include('../partials/header') %>
 
   <main class="content">
-    <h1>Visits Log</h1>
-    <div class="total">Total Visits: <%= visits.length %></div>
+    <section class="dashboard-header">
+      <p class="section-label dashboard-kicker">Traffic</p>
+      <h1>Visits Log</h1>
+      <p class="dashboard-sub">Detailed logs for selected period</p>
+      <div class="total">Total Visits: <%= visits.length.toLocaleString('fr-FR') %></div>
+      <a class="back-link" href="/dashboard/visits">← Back to yearly overview</a>
+    </section>
 
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>IP</th>
-          <th>Agent</th>
-          <th>URL</th>
-          <th>Origin</th>
-          <th>Lang</th>
-          <th>Visited At</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (visits.length === 0) { %>
+    <section class="table-shell">
+      <table>
+        <thead>
           <tr>
-            <td colspan="7" style="text-align:center; padding:1rem; color:#6b7280;">
-              No visits yet
-            </td>
+            <th>#</th>
+            <th>IP</th>
+            <th>Agent</th>
+            <th>URL</th>
+            <th>Origin</th>
+            <th>Lang</th>
+            <th>Visited At</th>
           </tr>
-        <% } else { %>
-          <% visits.forEach((v, i) => { %>
+        </thead>
+        <tbody>
+          <% if (visits.length === 0) { %>
             <tr>
-              <td><%= i + 1 %></td>
-              <td><%= v.ip || '-' %></td>
-              <td class="small"><%= v.agent || '-' %></td>
-              <td><%= v.url || '-' %></td>
-              <td><%= v.origin || '-' %></td>
-              <td><%= v.lang || '-' %></td>
-              <td class="timestamp"><%= v.createdAt.toLocaleString() %></td>
+              <td colspan="7" style="text-align:center; padding:1rem; color:#64748b;">
+                No visits yet
+              </td>
             </tr>
-          <% }) %>
-        <% } %>
-      </tbody>
-    </table>
+          <% } else { %>
+            <% visits.forEach((v, i) => { %>
+              <tr>
+                <td><%= i + 1 %></td>
+                <td><%= v.ip || '-' %></td>
+                <td class="small"><%= v.agent || '-' %></td>
+                <td><%= v.url || '-' %></td>
+                <td><%= v.origin || '-' %></td>
+                <td><%= v.lang || '-' %></td>
+                <td class="timestamp"><%= v.createdAt.toLocaleString() %></td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </section>
   </main>
 
 <%- include('../partials/footer') %>

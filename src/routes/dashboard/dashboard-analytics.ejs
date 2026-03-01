@@ -1,24 +1,28 @@
 <%- include('../partials/header') %>
 
   <main class="content">
-    <h1>Analytics Dashboard</h1>
+    <section class="dashboard-header">
+      <p class="section-label dashboard-kicker">Insights</p>
+      <h1>Analytics Dashboard</h1>
+      <p class="dashboard-sub">Event distribution across sources, actions, platforms and days</p>
+      <div class="total">Total events: <%= total.toLocaleString('fr-FR') %></div>
+    </section>
 
-    <div class="total-badge">Total events: <%= total.toLocaleString() %></div>
-
-    <!-- Source filter -->
-    <form class="filter-bar" method="get" action="/dashboard/analytics">
-      <label for="source-select">Filter by source:</label>
-      <select id="source-select" name="source">
-        <option value="">All sources</option>
-        <% sources.forEach(s => { %>
-          <option value="<%= s %>" <%= activeSource === s ? 'selected' : '' %>><%= s %></option>
-        <% }) %>
-      </select>
-      <button type="submit">Apply</button>
-      <% if (activeSource) { %>
-        <a href="/dashboard/analytics" style="color:#94a3b8; font-size:0.85rem;">Clear</a>
-      <% } %>
-    </form>
+    <section class="analytics-toolbar">
+      <form class="filter-bar" method="get" action="/dashboard/analytics">
+        <label for="source-select">Filter by source</label>
+        <select id="source-select" name="source">
+          <option value="">All sources</option>
+          <% sources.forEach(s => { %>
+            <option value="<%= s %>" <%= activeSource === s ? 'selected' : '' %>><%= s %></option>
+          <% }) %>
+        </select>
+        <button type="submit">Apply</button>
+        <% if (activeSource) { %>
+          <a href="/dashboard/analytics" class="filter-clear">Clear</a>
+        <% } %>
+      </form>
+    </section>
 
     <div class="analytics-grid">
 
