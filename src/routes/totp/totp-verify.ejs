@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Authentification TOTP — Lux Anima Studio</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0a1024;
+      color: #e2e8f0;
+      font-family: system-ui, sans-serif;
+    }
+
+    .card {
+      background: #0f1a30;
+      border: 1px solid #1e2d4a;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .card-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, #1a2a5e 0%, #0d1636 100%);
+      border: 1px solid #2a3f7a;
+      border-radius: 14px;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 0 24px rgba(91, 140, 255, 0.15);
+    }
+
+    .card-icon svg {
+      width: 28px;
+      height: 28px;
+      color: #5B8CFF;
+    }
+
+    h1 {
+      margin: 0 0 0.4rem;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #f1f5f9;
+    }
+
+    .subtitle {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin: 0 0 1.75rem;
+      line-height: 1.5;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-align: left;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: #060d1c;
+      border: 1px solid #1e2d4a;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 1.4rem;
+      font-family: monospace;
+      text-align: center;
+      letter-spacing: 0.4em;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #5B8CFF;
+    }
+
+    input[type="text"]::placeholder {
+      color: #334155;
+      letter-spacing: 0.3em;
+    }
+
+    button {
+      padding: 0.75rem;
+      background: #5B8CFF;
+      color: #0a1024;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:hover {
+      background: #7da5ff;
+    }
+
+    .error {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .brand {
+      margin-top: 1.5rem;
+      font-size: 0.7rem;
+      color: #334155;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="card-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    </div>
+
+    <h1>Authentification</h1>
+    <p class="subtitle">
+      Entrez le code à 6 chiffres généré par votre application d'authentification.
+    </p>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="error"><%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/totp/verify" autocomplete="off">
+      <label for="code">Code TOTP</label>
+      <input
+        type="text"
+        id="code"
+        name="code"
+        placeholder="000000"
+        maxlength="6"
+        pattern="[0-9]{6}"
+        inputmode="numeric"
+        required
+        autofocus
+      />
+      <button type="submit">Vérifier</button>
+    </form>
+
+    <div class="brand">Lux Anima Studio — Back Office</div>
+  </div>
+
+</body>
+</html>

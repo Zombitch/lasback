@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -29,4 +30,8 @@ export const config = {
     .split(',')
     .map(k => k.trim())
     .filter(Boolean),
+
+  sessionSecret:
+    getEnvVar('SESSION_SECRET', { required: false }) ||
+    crypto.randomBytes(32).toString('hex'),
 };
