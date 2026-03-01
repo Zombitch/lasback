@@ -19,9 +19,9 @@ export const config = {
   isDev: env === 'development',
   port: parseInt(getEnvVar('PORT', { required: false }) || '4000', 10),
 
-  corsAllowedOrigins: getEnvVar('CORS_ALLOWED_ORIGINS', {
+  corsAllowedOrigins: (getEnvVar('CORS_ALLOWED_ORIGINS', {
     required: false,
-  })
+  }) || '')
     .split(',')
     .map(o => o.trim())
     .filter(Boolean),
