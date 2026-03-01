@@ -157,17 +157,13 @@ app.use('/totp', totpRouter);
 // Health check (JSON, no view) — no TOTP gate
 app.use('/health', healthRouter);
 
+// API routes are protected by API key/origin checks and must not require TOTP
+app.use('/visit', apiKeyAuth, checkOriginAllowed, visitRouter);
+app.use('/analytics', apiKeyAuth, checkOriginAllowed, analyticsRouter);
+
 // All view routes are protected by TOTP
 app.use('/', totpAuth, homeRouter);
 app.use('/dashboard', totpAuth, dashboardRouter);
-
-/**
- * Api Key setted up for next route
- */
-app.use(apiKeyAuth, checkOriginAllowed);
-
-app.use('/visit', visitRouter);
-app.use('/analytics', analyticsRouter);
 
 /**
  * 404 handler (for unmatched routes)
