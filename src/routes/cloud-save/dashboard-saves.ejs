@@ -1,0 +1,103 @@
+<%- include('../partials/header') %>
+
+  <main class="content">
+    <section class="dashboard-header">
+      <p class="section-label dashboard-kicker">Cloud Saves</p>
+      <h1>Save Management</h1>
+      <p class="dashboard-sub">Browse, inspect, and manage player save data across all games</p>
+    </section>
+
+    <!-- Stats strip -->
+    <div class="saves-stats">
+      <div class="stat-card">
+        <span class="stat-card-num"><%= stats.totalGames %></span>
+        <span class="stat-card-label">Games</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-num"><%= stats.totalPlayers %></span>
+        <span class="stat-card-label">Players</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-num"><%= stats.totalSlots %></span>
+        <span class="stat-card-label">Save Slots</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-num"><%= stats.totalVersions %></span>
+        <span class="stat-card-label">Versions</span>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <section class="analytics-toolbar">
+      <form class="filter-bar" method="get" action="/dashboard/saves">
+        <label for="game-select">Game</label>
+        <select id="game-select" name="gameId">
+          <option value="">Select a game</option>
+          <% games.forEach(g => { %>
+            <option value="<%= g._id %>" <%= filters.gameId === g._id.toString() ? 'selected' : '' %>><%= g.name %> (<%= g.slug %>)</option>
+          <% }) %>
+        </select>
+
+        <label for="player-select">Player</label>
+        <select id="player-select" name="playerId">
+          <option value="">All players</option>
+          <% players.forEach(p => { %>
+            <option value="<%= p._id %>" <%= filters.playerId === p._id.toString() ? 'selected' : '' %>><%= p.username %></option>
+          <% }) %>
+        </select>
+
+        <label for="slot-input">Slot</label>
+        <input type="text" id="slot-input" name="slotKey" value="<%= filters.slotKey %>" placeholder="e.g. default" class="filter-input" />
+
+        <button type="submit">Apply</button>
+        <% if (filters.gameId || filters.playerId || filters.slotKey) { %>
+          <a href="/dashboard/saves" class="filter-clear">Clear</a>
+        <% } %>
+      </form>
+    </section>
+
+    <!-- Results -->
+    <% if (!filters.gameId) { %>
+      <div class="no-data">Select a game above to browse save slots</div>
+    <% } else if (slots.length === 0) { %>
+      <div class="no-data">No save slots found for the selected filters</div>
+    <% } else { %>
+      <div class="table-shell">
+        <table>
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Slot</th>
+              <th>Version</th>
+              <th>Last Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% slots.forEach(slot => { %>
+              <tr>
+                <td>
+                  <% if (slot.playerId) { %>
+                    <strong><%= slot.playerId.username %></strong>
+                    <br><span class="small"><%= slot.playerId.email %></span>
+                  <% } else { %>
+                    <span class="small">(deleted player)</span>
+                  <% } %>
+                </td>
+                <td><code><%= slot.slotKey %></code></td>
+                <td class="count-cell"><%= slot.currentVersion %></td>
+                <td class="timestamp"><%= new Date(slot.updatedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'medium' }) %></td>
+                <td>
+                  <a href="/dashboard/saves/slot/<%= slot._id %>" class="action-link">View versions</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <a href="/" class="back-link">&larr; Back to dashboard</a>
+  </main>
+
+<%- include('../partials/footer') %>
