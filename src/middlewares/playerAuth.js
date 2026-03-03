@@ -20,7 +20,7 @@ export function playerAuth(req, res, next) {
   const token = authHeader.slice(7);
 
   try {
-    const decoded = jwt.verify(token, config.jwtSecret);
+    const decoded = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] });
     req.player = { id: decoded.sub, username: decoded.username };
     next();
   } catch {

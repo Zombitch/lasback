@@ -1,31 +1,31 @@
-import { Visit } from './visit.model.js'
+import { Visit } from './visit.model.js';
 
 export async function postVisit(req, res) {
-    const userAgent = req.headers['user-agent'];
-    const clientIp = req.ip;
-    const url = req.body?.url;
-    const lang = req.body?.lang;
-    const origin = req.body?.origin;
-    if(clientIp && userAgent && url){
-        const visit = await Visit.create({
-            ip: clientIp,
-            agent: userAgent,
-            url: url,
-            lang: lang,
-            origin: origin
-        });
-        res.status(200).json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
-    }else {
-        res.status(400).json({ status: 'ko', uptime: process.uptime(), timestamp: new Date().toISOString() });
-    }
+  const userAgent = req.headers['user-agent']?.slice(0, 500);
+  const clientIp = req.ip;
+  const url = typeof req.body?.url === 'string' ? req.body.url.trim().slice(0, 2000) : undefined;
+  const lang = typeof req.body?.lang === 'string' ? req.body.lang.trim().slice(0, 50) : undefined;
+  const origin =
+    typeof req.body?.origin === 'string' ? req.body.origin.trim().slice(0, 500) : undefined;
+
+  if (clientIp && userAgent && url) {
+    await Visit.create({
+      ip: clientIp,
+      agent: userAgent,
+      url,
+      lang,
+      origin,
+    });
+    res.status(200).json({ status: 'ok' });
+  } else {
+    res.status(400).json({ status: 'ko', message: 'Missing required fields (ip, userAgent, url)' });
+  }
 }
 
 export async function getVisit(req, res) {
-    const visits = await Visit.find();
-    res.status(200).json({
-        status: 'ok',
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString(),
-        visits: visits
-    });
+  const visits = await Visit.find().sort({ createdAt: -1 }).limit(500).lean();
+  res.status(200).json({
+    status: 'ok',
+    visits,
+  });
 }

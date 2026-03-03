@@ -1,10 +1,23 @@
 import { Router } from 'express';
 import * as OTPAuth from 'otpauth';
 import QRCode from 'qrcode';
+import rateLimit from 'express-rate-limit';
 import { Totp } from './totp.model.js';
 import { logger } from '../../utils/logger.js';
 
 const router = Router();
+
+/**
+ * Rate limiter for TOTP endpoints to prevent brute-force of 6-digit codes.
+ * 6 digits = 1 000 000 combinations; 5 attempts per 15 min makes brute-force infeasible.
+ */
+const totpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many attempts, please try again later.',
+});
 
 const ISSUER = 'LuxAnimaStudio';
 const TOTP_WINDOW = 2; // ±2 time-steps (±60 s) to tolerate clock drift
@@ -56,14 +69,7 @@ router.get('/setup', async (req, res, next) => {
     const otpauthUri = totp.toString();
     const qrDataUrl = await QRCode.toDataURL(otpauthUri);
 
-    logger.info(
-      {
-        secretPrefix: secret.base32.slice(0, 4) + '…',
-        sessionSecret: req.session.pendingTotpSecret.slice(0, 4) + '…',
-        uriPreview: otpauthUri.slice(0, 60) + '…',
-      },
-      '[TOTP-SETUP] Rendering setup page',
-    );
+    logger.info('[TOTP-SETUP] Rendering setup page');
 
     res.render('totp-setup', {
       qrDataUrl,
@@ -77,7 +83,7 @@ router.get('/setup', async (req, res, next) => {
 // ─── POST /totp/setup ───────────────────────────────────────────────────────
 // Verify the code entered by the user against the pending secret,
 // then persist the secret in DB.
-router.post('/setup', async (req, res, next) => {
+router.post('/setup', totpLimiter, async (req, res, next) => {
   try {
     const count = await Totp.countDocuments();
     if (count > 0) {
@@ -104,27 +110,9 @@ router.post('/setup', async (req, res, next) => {
       secret: reconstructed,
     });
 
-    const serverTime = new Date();
-    const expectedToken = totp.generate();
     const delta = totp.validate({ token: code, window: TOTP_WINDOW });
 
-    // Log the base32 round-trip to detect encoding mismatches
-    const roundTrippedBase32 = reconstructed.base32;
-
-    logger.info(
-      {
-        serverTime: serverTime.toISOString(),
-        serverEpoch: Math.floor(serverTime.getTime() / 1000),
-        timeStep: Math.floor(serverTime.getTime() / 30000),
-        rawCode,
-        sanitizedCode: code,
-        expectedToken,
-        delta,
-        secretPrefix: pendingSecret.slice(0, 4) + '…',
-        base32RoundTripMatch: pendingSecret === roundTrippedBase32,
-      },
-      '[TOTP-SETUP] Validation attempt',
-    );
+    logger.info({ delta }, '[TOTP-SETUP] Validation attempt');
 
     if (delta === null) {
       // Invalid code — re-generate QR with same secret
@@ -173,7 +161,7 @@ router.get('/verify', async (req, res, next) => {
 
 // ─── POST /totp/verify ──────────────────────────────────────────────────────
 // Validate the code against all stored TOTP secrets.
-router.post('/verify', async (req, res, next) => {
+router.post('/verify', totpLimiter, async (req, res, next) => {
   try {
     const count = await Totp.countDocuments();
     if (count === 0) {
@@ -184,18 +172,7 @@ router.post('/verify', async (req, res, next) => {
     const code = sanitizeCode(rawCode);
     const secrets = await Totp.find();
 
-    const serverTime = new Date();
-    logger.info(
-      {
-        serverTime: serverTime.toISOString(),
-        serverEpoch: Math.floor(serverTime.getTime() / 1000),
-        timeStep: Math.floor(serverTime.getTime() / 30000),
-        rawCode,
-        sanitizedCode: code,
-        storedSecrets: secrets.length,
-      },
-      '[TOTP-VERIFY] Verification attempt',
-    );
+    logger.info({ storedSecrets: secrets.length }, '[TOTP-VERIFY] Verification attempt');
 
     let valid = false;
     for (const entry of secrets) {
@@ -208,18 +185,7 @@ router.post('/verify', async (req, res, next) => {
         secret: OTPAuth.Secret.fromBase32(entry.secret),
       });
 
-      const expectedToken = totp.generate();
       const delta = totp.validate({ token: code, window: TOTP_WINDOW });
-
-      logger.info(
-        {
-          label: entry.label,
-          expectedToken,
-          delta,
-          secretPrefix: entry.secret.slice(0, 4) + '…',
-        },
-        '[TOTP-VERIFY] Checked secret',
-      );
 
       if (delta !== null) {
         valid = true;

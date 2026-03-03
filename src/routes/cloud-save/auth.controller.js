@@ -41,10 +41,11 @@ export async function register(req, res) {
     });
   }
 
-  if (typeof password !== 'string' || password.length < 8) {
+  // bcrypt silently truncates at 72 bytes — enforce a max to avoid surprises
+  if (typeof password !== 'string' || password.length < 8 || password.length > 72) {
     return res.status(400).json({
       success: false,
-      message: 'Password must be at least 8 characters',
+      message: 'Password must be 8–72 characters',
     });
   }
 
@@ -97,6 +98,10 @@ export async function login(req, res) {
       success: false,
       message: '`email` and `password` are required',
     });
+  }
+
+  if (typeof password !== 'string' || password.length > 72) {
+    return res.status(401).json({ success: false, message: 'Invalid credentials' });
   }
 
   const player = await Player.findOne({ email: email.toLowerCase().trim() });
