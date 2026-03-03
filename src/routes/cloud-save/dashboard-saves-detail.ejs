@@ -1,0 +1,57 @@
+<%- include('../partials/header') %>
+
+  <main class="content">
+    <% if (error) { %>
+      <div class="no-data"><%= error %></div>
+      <a href="/dashboard/saves" class="back-link">&larr; Back to saves</a>
+    <% } else { %>
+
+    <section class="dashboard-header">
+      <p class="section-label dashboard-kicker">Cloud Saves</p>
+      <h1>Version History</h1>
+      <p class="dashboard-sub">
+        <strong><%= slot.gameId ? slot.gameId.name : '(unknown game)' %></strong> &mdash;
+        Player: <strong><%= slot.playerId ? slot.playerId.username : '(deleted)' %></strong> &mdash;
+        Slot: <code><%= slot.slotKey %></code> &mdash;
+        Current version: <span class="total"><%= slot.currentVersion %></span>
+      </p>
+    </section>
+
+    <% if (versions.length === 0) { %>
+      <div class="no-data">No versions found for this slot</div>
+    <% } else { %>
+      <div class="table-shell">
+        <table>
+          <thead>
+            <tr>
+              <th>Version</th>
+              <th>Created</th>
+              <th>Hash</th>
+              <th>Build</th>
+              <th>Payload Preview</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% versions.forEach(v => {
+                 const payloadStr = JSON.stringify(v.payload);
+                 const preview = payloadStr.length > 120 ? payloadStr.slice(0, 120) + '...' : payloadStr;
+            %>
+              <tr>
+                <td class="count-cell">v<%= v.version %></td>
+                <td class="timestamp"><%= new Date(v.createdAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'medium' }) %></td>
+                <td><code class="small"><%= v.payloadHash ? v.payloadHash.slice(0, 12) + '...' : '-' %></code></td>
+                <td class="small"><%= v.clientBuild || '-' %></td>
+                <td><code class="small payload-preview"><%= preview %></code></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <a href="/dashboard/saves<%= slot.gameId ? '?gameId=' + slot.gameId._id : '' %>" class="back-link">&larr; Back to saves</a>
+
+    <% } %>
+  </main>
+
+<%- include('../partials/footer') %>

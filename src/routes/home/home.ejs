@@ -25,6 +25,14 @@
       <span class="stat-card-label">Events analytics</span>
       <span class="stat-card-delta">+<%= recentEvents %> dernières 24h</span>
     </div>
+    <div class="stat-card">
+      <span class="stat-card-num"><%= totalSaves.toLocaleString('fr-FR') %></span>
+      <span class="stat-card-label">Cloud saves</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-card-num"><%= totalPlayers.toLocaleString('fr-FR') %></span>
+      <span class="stat-card-label">Joueurs</span>
+    </div>
     <div class="stat-card uptime">
       <span class="stat-card-num"><span class="stat-dot"></span><%= uptime %></span>
       <span class="stat-card-label">Uptime serveur</span>
@@ -60,6 +68,21 @@
         <p class="nav-card-title">Analytics jeux & sites</p>
         <p class="nav-card-desc">Suivi d'événements — actions, pays, plateformes, sessions</p>
         <p class="nav-card-url">/dashboard/analytics</p>
+      </div>
+    </a>
+
+    <a href="/dashboard/saves" class="nav-card">
+      <div class="nav-card-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <p class="nav-card-title">Cloud Saves</p>
+        <p class="nav-card-desc">Gestion des sauvegardes joueurs, versions et slots par jeu</p>
+        <p class="nav-card-url">/dashboard/saves</p>
       </div>
     </a>
 

@@ -17,6 +17,7 @@ import { errorHandler } from './middlewares/errorHandler.js';
 import { apiKeyAuth } from './middlewares/apiKeyAuth.js';
 import { checkOriginAllowed } from './middlewares/checkOriginAllowed.js';
 import { totpAuth } from './middlewares/totpAuth.js';
+import { playerAuth } from './middlewares/playerAuth.js';
 
 import healthRouter from './routes/health/health.route.js';
 import homeRouter from './routes/home/home.route.js';
@@ -24,6 +25,11 @@ import dashboardRouter from './routes/dashboard/dashboard.route.js';
 import totpRouter from './routes/totp/totp.route.js';
 import visitRouter from './routes/visit/visit.route.js';
 import analyticsRouter from './routes/analytics/analytics.route.js';
+
+import cloudSaveAuthRouter from './routes/cloud-save/auth.route.js';
+import cloudSaveRouter from './routes/cloud-save/saves.route.js';
+import adminSavesRouter from './routes/cloud-save/admin-saves.route.js';
+import dashboardSavesRouter from './routes/cloud-save/dashboard-saves.route.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,6 +44,7 @@ app.set('views', [
   path.join(__dirname, 'routes/home'),
   path.join(__dirname, 'routes/dashboard'),
   path.join(__dirname, 'routes/totp'),
+  path.join(__dirname, 'routes/cloud-save'),
 ]);
 
 /**
@@ -124,9 +131,34 @@ app.use(hpp());
 app.use(compression());
 
 /**
+ * Cloud Save player routes — mounted BEFORE the global 10 kb body parser
+ * so save payloads up to 256 KB are accepted.
+ *
+ * Auth routes keep the standard 10 kb limit.
+ * Save routes get a 256 kb limit for game payloads.
+ * Both require an API key + allowed origin; save routes also require a JWT.
+ */
+app.use(
+  '/v1/auth',
+  express.json({ limit: '10kb' }),
+  apiKeyAuth,
+  checkOriginAllowed,
+  cloudSaveAuthRouter,
+);
+app.use(
+  '/v1/games',
+  express.json({ limit: '256kb' }),
+  apiKeyAuth,
+  checkOriginAllowed,
+  playerAuth,
+  cloudSaveRouter,
+);
+
+/**
  * Body parsers
  *
  * Limit body size to reduce DoS risk.
+ * (Cloud save routes above have their own larger parser.)
  */
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
@@ -161,8 +193,12 @@ app.use('/health', healthRouter);
 app.use('/visit', apiKeyAuth, checkOriginAllowed, visitRouter);
 app.use('/analytics', apiKeyAuth, checkOriginAllowed, analyticsRouter);
 
+// Admin saves JSON API (TOTP protected)
+app.use('/admin', totpAuth, adminSavesRouter);
+
 // All view routes are protected by TOTP
 app.use('/', totpAuth, homeRouter);
+app.use('/dashboard/saves', totpAuth, dashboardSavesRouter);
 app.use('/dashboard', totpAuth, dashboardRouter);
 
 /**

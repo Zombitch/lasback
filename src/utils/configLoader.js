@@ -34,4 +34,10 @@ export const config = {
   sessionSecret:
     getEnvVar('SESSION_SECRET', { required: false }) ||
     crypto.randomBytes(32).toString('hex'),
+
+  jwtSecret:
+    getEnvVar('JWT_SECRET', { required: false }) ||
+    crypto.randomBytes(32).toString('hex'),
+
+  jwtExpiresIn: getEnvVar('JWT_EXPIRES_IN', { required: false }) || '7d',
 };
