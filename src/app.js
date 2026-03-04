@@ -79,7 +79,20 @@ app.use(
  */
 app.use(
   helmet({
-    contentSecurityPolicy: false, // we'll tighten CSP later when we know which frontends call us
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"], // inline styles used by dashboard templates
+        imgSrc: ["'self'", 'data:'], // data: required for TOTP QR code rendering
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+      },
+    },
   })
 );
 
@@ -168,12 +181,14 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
  */
 app.use(
   session({
+    name: '__las_sid',
     secret: config.sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
       secure: config.isProd,
+      sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24 h
     },
   })

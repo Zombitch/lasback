@@ -1,7 +1,23 @@
+import crypto from 'crypto';
 import { config } from '../utils/configLoader.js';
 
+/**
+ * Timing-safe comparison of two strings.
+ * Prevents timing side-channel attacks on API key validation.
+ */
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    // Compare against self to keep constant time, then return false
+    crypto.timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 export function apiKeyAuth(req, res, next) {
-  // Read the key from headers. Could also allow query param, but header is cleaner.
   const providedKey = req.header('x-api-key');
 
   if (!providedKey) {
@@ -11,9 +27,7 @@ export function apiKeyAuth(req, res, next) {
     });
   }
 
-  // Constant-time-ish comparison isn't critical for public keys,
-  // but we still don't just == blindly. Simple check is OK here.
-  const isValid = config.apiKeys.includes(providedKey);
+  const isValid = config.apiKeys.some((key) => timingSafeEqual(key, providedKey));
 
   if (!isValid) {
     return res.status(401).json({
@@ -22,8 +36,6 @@ export function apiKeyAuth(req, res, next) {
     });
   }
 
-  // Optionally attach info about which key was used
   req.apiKey = providedKey;
-
   next();
 }
