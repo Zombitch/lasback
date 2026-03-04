@@ -41,6 +41,8 @@
         RUN echo "CORS_ALLOWED_ORIGINS={{ cors }}" >> .env
         RUN echo "API_KEYS={{ apikeys }}" >> .env
         RUN echo "MONGO_URI={{ mongoURI }}" >> .env
+        RUN echo "SESSION_SECRET={{ sessionSecret }}" >> .env
+        RUN echo "JWT_SECRET={{ jwtSecret }}" >> .env
         RUN npm i
         EXPOSE 4000
         CMD ["npm","start"]
