@@ -821,3 +821,167 @@ code {
   color: #64748b;
   font-size: 0.72rem;
 }
+
+/* ── Feature Interruptor ──────────────────────────────────── */
+.fi-create-card {
+  background: #0f1a30;
+  border: 1px solid #1e2d4a;
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.fi-create-card h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.fi-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.fi-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 140px;
+  min-width: 120px;
+}
+
+.fi-field label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fi-field .filter-input {
+  max-width: none;
+}
+
+.fi-field-btn {
+  flex: 0 0 auto;
+}
+
+.fi-btn {
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.fi-btn-create {
+  background: #5B8CFF;
+  color: #0a1024;
+}
+
+.fi-btn-create:hover {
+  background: #7da5ff;
+}
+
+.fi-btn-cancel {
+  background: #1e2d4a;
+  color: #94a3b8;
+}
+
+.fi-btn-cancel:hover {
+  background: #2a3f6a;
+}
+
+.fi-error {
+  color: #f87171;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.fi-group {
+  margin-bottom: 1.5rem;
+}
+
+.fi-group-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.fi-group-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.fi-group-count {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.fi-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s;
+  user-select: none;
+}
+
+.fi-badge-on {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.fi-badge-off {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.fi-badge:hover {
+  filter: brightness(1.2);
+}
+
+/* ── Feature Interruptor: Edit modal ──────────────────────── */
+.fi-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.fi-modal-content {
+  background: #0f1a30;
+  border: 1px solid #1e2d4a;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  width: 100%;
+  max-width: 600px;
+}
+
+.fi-modal-content h3 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  color: #e2e8f0;
+}
+
+.fi-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}

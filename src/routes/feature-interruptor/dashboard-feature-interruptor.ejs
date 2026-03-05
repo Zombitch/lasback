@@ -1,0 +1,289 @@
+<%- include('../partials/header') %>
+
+<div class="content">
+
+  <div class="dashboard-header">
+    <p class="dashboard-kicker section-label">Feature Interruptor</p>
+    <h1>Gestion des Feature Flags</h1>
+    <p class="dashboard-sub">Activer / désactiver des fonctionnalités par application. Les apps externes interrogent <code>GET /feature-interruptor?appId=…&featureId=…</code></p>
+    <a href="/" class="back-link">&larr; Retour à l'accueil</a>
+  </div>
+
+  <!-- Stats -->
+  <div class="saves-stats">
+    <div class="stat-card">
+      <span class="stat-card-num"><%= total %></span>
+      <span class="stat-card-label">Total flags</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-card-num" style="color:#22c55e"><%= enabledCount %></span>
+      <span class="stat-card-label">Activés</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-card-num" style="color:#ef4444"><%= total - enabledCount %></span>
+      <span class="stat-card-label">Désactivés</span>
+    </div>
+  </div>
+
+  <!-- Create form -->
+  <div class="fi-create-card">
+    <h3>Nouveau Feature Interruptor</h3>
+    <form id="fi-create-form" class="fi-form">
+      <div class="fi-form-row">
+        <div class="fi-field">
+          <label for="fi-appId">App ID *</label>
+          <input type="text" id="fi-appId" name="appId" required placeholder="my-game" class="filter-input" />
+        </div>
+        <div class="fi-field">
+          <label for="fi-appName">App Name</label>
+          <input type="text" id="fi-appName" name="appName" placeholder="My Game" class="filter-input" />
+        </div>
+        <div class="fi-field">
+          <label for="fi-featureId">Feature ID *</label>
+          <input type="text" id="fi-featureId" name="featureId" required placeholder="dark-mode" class="filter-input" />
+        </div>
+        <div class="fi-field">
+          <label for="fi-featureName">Feature Name</label>
+          <input type="text" id="fi-featureName" name="featureName" placeholder="Dark Mode" class="filter-input" />
+        </div>
+        <div class="fi-field">
+          <label for="fi-value">Activé</label>
+          <select id="fi-value" name="value" class="filter-input">
+            <option value="true">Oui</option>
+            <option value="false" selected>Non</option>
+          </select>
+        </div>
+        <div class="fi-field fi-field-btn">
+          <button type="submit" class="fi-btn fi-btn-create">Créer</button>
+        </div>
+      </div>
+      <p id="fi-create-error" class="fi-error" style="display:none"></p>
+    </form>
+  </div>
+
+  <!-- Feature list grouped by App -->
+  <% const groupKeys = Object.keys(grouped).sort(); %>
+  <% if (groupKeys.length === 0) { %>
+    <div class="no-data">Aucun feature interruptor configuré.</div>
+  <% } else { %>
+    <% for (const groupName of groupKeys) { %>
+      <div class="fi-group">
+        <div class="fi-group-header">
+          <h2><%= groupName %></h2>
+          <span class="fi-group-count"><%= grouped[groupName].length %> flag<%= grouped[groupName].length > 1 ? 's' : '' %></span>
+        </div>
+        <div class="table-shell">
+          <table>
+            <thead>
+              <tr>
+                <th>App ID</th>
+                <th>Feature ID</th>
+                <th>Feature Name</th>
+                <th>Statut</th>
+                <th>Mis à jour</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% for (const f of grouped[groupName]) { %>
+                <tr id="fi-row-<%= f._id %>">
+                  <td><code><%= f.appId %></code></td>
+                  <td><code><%= f.featureId %></code></td>
+                  <td><%= f.featureName || '—' %></td>
+                  <td>
+                    <span class="fi-badge <%= f.value ? 'fi-badge-on' : 'fi-badge-off' %>"
+                          data-id="<%= f._id %>"
+                          data-value="<%= f.value %>"
+                          data-action="toggle"
+                          title="Cliquer pour basculer">
+                      <%= f.value ? 'ON' : 'OFF' %>
+                    </span>
+                  </td>
+                  <td class="timestamp"><%= new Date(f.updatedAt).toLocaleString('fr-FR') %></td>
+                  <td>
+                    <a href="#" class="action-link" data-action="edit" data-id="<%= f._id %>">Modifier</a>
+                    &nbsp;
+                    <a href="#" class="action-link" style="color:#f87171" data-action="delete" data-id="<%= f._id %>">Supprimer</a>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% } %>
+  <% } %>
+
+</div>
+
+<!-- Edit modal -->
+<div id="fi-modal" class="fi-modal" style="display:none">
+  <div class="fi-modal-content">
+    <h3>Modifier le Feature Interruptor</h3>
+    <form id="fi-edit-form" class="fi-form">
+      <input type="hidden" id="fi-edit-id" />
+      <div class="fi-form-row">
+        <div class="fi-field">
+          <label for="fi-edit-appId">App ID *</label>
+          <input type="text" id="fi-edit-appId" required class="filter-input" />
+        </div>
+        <div class="fi-field">
+          <label for="fi-edit-appName">App Name</label>
+          <input type="text" id="fi-edit-appName" class="filter-input" />
+        </div>
+        <div class="fi-field">
+          <label for="fi-edit-featureId">Feature ID *</label>
+          <input type="text" id="fi-edit-featureId" required class="filter-input" />
+        </div>
+        <div class="fi-field">
+          <label for="fi-edit-featureName">Feature Name</label>
+          <input type="text" id="fi-edit-featureName" class="filter-input" />
+        </div>
+        <div class="fi-field">
+          <label for="fi-edit-value">Activé</label>
+          <select id="fi-edit-value" class="filter-input">
+            <option value="true">Oui</option>
+            <option value="false">Non</option>
+          </select>
+        </div>
+      </div>
+      <p id="fi-edit-error" class="fi-error" style="display:none"></p>
+      <div class="fi-modal-actions">
+        <button type="submit" class="fi-btn fi-btn-create">Enregistrer</button>
+        <button type="button" class="fi-btn fi-btn-cancel" id="fi-cancel-btn">Annuler</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // ── Create ──────────────────────────────────────────────────
+  document.getElementById('fi-create-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById('fi-create-error');
+    errEl.style.display = 'none';
+
+    const body = {
+      appId: document.getElementById('fi-appId').value.trim(),
+      appName: document.getElementById('fi-appName').value.trim(),
+      featureId: document.getElementById('fi-featureId').value.trim(),
+      featureName: document.getElementById('fi-featureName').value.trim(),
+      value: document.getElementById('fi-value').value === 'true',
+    };
+
+    const res = await fetch('/admin/feature-interruptors', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      errEl.textContent = data.message;
+      errEl.style.display = 'block';
+      return;
+    }
+
+    location.reload();
+  });
+
+  // ── Toggle (quick ON/OFF) ──────────────────────────────────
+  async function toggleFeature(el) {
+    const id = el.dataset.id;
+    const current = el.dataset.value === 'true';
+    const newVal = !current;
+
+    const res = await fetch('/admin/feature-interruptors/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value: newVal }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      el.dataset.value = String(newVal);
+      el.textContent = newVal ? 'ON' : 'OFF';
+      el.className = 'fi-badge ' + (newVal ? 'fi-badge-on' : 'fi-badge-off');
+    }
+  }
+
+  // ── Edit modal ─────────────────────────────────────────────
+  let allFeatures = <%- JSON.stringify(Object.values(grouped).flat()) %>;
+
+  function editFeature(id) {
+    const f = allFeatures.find(x => x._id === id);
+    if (!f) return;
+    document.getElementById('fi-edit-id').value = f._id;
+    document.getElementById('fi-edit-appId').value = f.appId;
+    document.getElementById('fi-edit-appName').value = f.appName || '';
+    document.getElementById('fi-edit-featureId').value = f.featureId;
+    document.getElementById('fi-edit-featureName').value = f.featureName || '';
+    document.getElementById('fi-edit-value').value = String(f.value);
+    document.getElementById('fi-edit-error').style.display = 'none';
+    document.getElementById('fi-modal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('fi-modal').style.display = 'none';
+  }
+
+  document.getElementById('fi-edit-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById('fi-edit-error');
+    errEl.style.display = 'none';
+    const id = document.getElementById('fi-edit-id').value;
+
+    const body = {
+      appId: document.getElementById('fi-edit-appId').value.trim(),
+      appName: document.getElementById('fi-edit-appName').value.trim(),
+      featureId: document.getElementById('fi-edit-featureId').value.trim(),
+      featureName: document.getElementById('fi-edit-featureName').value.trim(),
+      value: document.getElementById('fi-edit-value').value === 'true',
+    };
+
+    const res = await fetch('/admin/feature-interruptors/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      errEl.textContent = data.message;
+      errEl.style.display = 'block';
+      return;
+    }
+
+    location.reload();
+  });
+
+  // ── Delete ─────────────────────────────────────────────────
+  async function deleteFeature(id) {
+    if (!confirm('Supprimer ce feature interruptor ?')) return;
+
+    const res = await fetch('/admin/feature-interruptors/' + id, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      const row = document.getElementById('fi-row-' + id);
+      if (row) row.remove();
+    }
+  }
+
+  // ── Event delegation (no inline handlers) ─────────────
+  document.addEventListener('click', (e) => {
+    const toggle = e.target.closest('[data-action="toggle"]');
+    if (toggle) { toggleFeature(toggle); return; }
+
+    const edit = e.target.closest('[data-action="edit"]');
+    if (edit) { e.preventDefault(); editFeature(edit.dataset.id); return; }
+
+    const del = e.target.closest('[data-action="delete"]');
+    if (del) { e.preventDefault(); deleteFeature(del.dataset.id); return; }
+  });
+
+  document.getElementById('fi-cancel-btn').addEventListener('click', closeModal);
+</script>
+
+<%- include('../partials/footer') %>

@@ -3,6 +3,7 @@ import { Visit } from '../visit/visit.model.js';
 import { Event } from '../analytics/analytics.model.js';
 import { SaveVersion } from '../cloud-save/saveVersion.model.js';
 import { Player } from '../cloud-save/player.model.js';
+import { FeatureInterruptor } from '../feature-interruptor/feature-interruptor.model.js';
 
 const router = Router();
 
@@ -21,12 +22,13 @@ function formatUptime(seconds) {
 
 router.get('/', async (_req, res, next) => {
   try {
-    const [totalVisits, totalEvents, totalSaves, totalPlayers] =
+    const [totalVisits, totalEvents, totalSaves, totalPlayers, totalFeatureFlags] =
       await Promise.all([
         Visit.countDocuments(),
         Event.countDocuments(),
         SaveVersion.countDocuments(),
         Player.countDocuments(),
+        FeatureInterruptor.countDocuments(),
       ]);
 
     // Events recorded in the last 24 h
@@ -41,6 +43,7 @@ router.get('/', async (_req, res, next) => {
       totalEvents,
       totalSaves,
       totalPlayers,
+      totalFeatureFlags,
       recentVisits,
       recentEvents,
       uptime: formatUptime(Math.floor(process.uptime())),

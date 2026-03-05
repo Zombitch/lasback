@@ -31,6 +31,10 @@ import cloudSaveRouter from './routes/cloud-save/saves.route.js';
 import adminSavesRouter from './routes/cloud-save/admin-saves.route.js';
 import dashboardSavesRouter from './routes/cloud-save/dashboard-saves.route.js';
 
+import featureInterruptorRouter from './routes/feature-interruptor/feature-interruptor.route.js';
+import adminFeatureInterruptorRouter from './routes/feature-interruptor/admin-feature-interruptor.route.js';
+import dashboardFeatureInterruptorRouter from './routes/feature-interruptor/dashboard-feature-interruptor.route.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -45,6 +49,7 @@ app.set('views', [
   path.join(__dirname, 'routes/dashboard'),
   path.join(__dirname, 'routes/totp'),
   path.join(__dirname, 'routes/cloud-save'),
+  path.join(__dirname, 'routes/feature-interruptor'),
 ]);
 
 /**
@@ -82,7 +87,7 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"], // inline <script> blocks used by dashboard templates
         styleSrc: ["'self'", "'unsafe-inline'"], // inline styles used by dashboard templates
         imgSrc: ["'self'", 'data:'], // data: required for TOTP QR code rendering
         connectSrc: ["'self'"],
@@ -207,13 +212,16 @@ app.use('/health', healthRouter);
 // API routes are protected by API key/origin checks and must not require TOTP
 app.use('/visit', apiKeyAuth, checkOriginAllowed, visitRouter);
 app.use('/analytics', apiKeyAuth, checkOriginAllowed, analyticsRouter);
+app.use('/feature-interruptor', apiKeyAuth, checkOriginAllowed, featureInterruptorRouter);
 
-// Admin saves JSON API (TOTP protected)
+// Admin JSON API (TOTP protected)
 app.use('/admin', totpAuth, adminSavesRouter);
+app.use('/admin', totpAuth, adminFeatureInterruptorRouter);
 
 // All view routes are protected by TOTP
 app.use('/', totpAuth, homeRouter);
 app.use('/dashboard/saves', totpAuth, dashboardSavesRouter);
+app.use('/dashboard/feature-interruptors', totpAuth, dashboardFeatureInterruptorRouter);
 app.use('/dashboard', totpAuth, dashboardRouter);
 
 /**
