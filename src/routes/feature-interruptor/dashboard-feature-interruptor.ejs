@@ -94,16 +94,16 @@
                     <span class="fi-badge <%= f.value ? 'fi-badge-on' : 'fi-badge-off' %>"
                           data-id="<%= f._id %>"
                           data-value="<%= f.value %>"
-                          onclick="toggleFeature(this)"
+                          data-action="toggle"
                           title="Cliquer pour basculer">
                       <%= f.value ? 'ON' : 'OFF' %>
                     </span>
                   </td>
                   <td class="timestamp"><%= new Date(f.updatedAt).toLocaleString('fr-FR') %></td>
                   <td>
-                    <a href="#" class="action-link" onclick="editFeature('<%= f._id %>'); return false;">Modifier</a>
+                    <a href="#" class="action-link" data-action="edit" data-id="<%= f._id %>">Modifier</a>
                     &nbsp;
-                    <a href="#" class="action-link" style="color:#f87171" onclick="deleteFeature('<%= f._id %>'); return false;">Supprimer</a>
+                    <a href="#" class="action-link" style="color:#f87171" data-action="delete" data-id="<%= f._id %>">Supprimer</a>
                   </td>
                 </tr>
               <% } %>
@@ -150,7 +150,7 @@
       <p id="fi-edit-error" class="fi-error" style="display:none"></p>
       <div class="fi-modal-actions">
         <button type="submit" class="fi-btn fi-btn-create">Enregistrer</button>
-        <button type="button" class="fi-btn fi-btn-cancel" onclick="closeModal()">Annuler</button>
+        <button type="button" class="fi-btn fi-btn-cancel" id="fi-cancel-btn">Annuler</button>
       </div>
     </form>
   </div>
@@ -270,6 +270,20 @@
       if (row) row.remove();
     }
   }
+
+  // ── Event delegation (no inline handlers) ─────────────
+  document.addEventListener('click', (e) => {
+    const toggle = e.target.closest('[data-action="toggle"]');
+    if (toggle) { toggleFeature(toggle); return; }
+
+    const edit = e.target.closest('[data-action="edit"]');
+    if (edit) { e.preventDefault(); editFeature(edit.dataset.id); return; }
+
+    const del = e.target.closest('[data-action="delete"]');
+    if (del) { e.preventDefault(); deleteFeature(del.dataset.id); return; }
+  });
+
+  document.getElementById('fi-cancel-btn').addEventListener('click', closeModal);
 </script>
 
 <%- include('../partials/footer') %>

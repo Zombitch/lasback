@@ -87,7 +87,7 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"], // inline scripts used by feature interruptor dashboard
+        scriptSrc: ["'self'", "'unsafe-inline'"], // inline <script> blocks used by dashboard templates
         styleSrc: ["'self'", "'unsafe-inline'"], // inline styles used by dashboard templates
         imgSrc: ["'self'", 'data:'], // data: required for TOTP QR code rendering
         connectSrc: ["'self'"],
