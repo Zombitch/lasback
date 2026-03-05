@@ -33,6 +33,10 @@
       <span class="stat-card-num"><%= totalPlayers.toLocaleString('fr-FR') %></span>
       <span class="stat-card-label">Joueurs</span>
     </div>
+    <div class="stat-card">
+      <span class="stat-card-num"><%= totalFeatureFlags.toLocaleString('fr-FR') %></span>
+      <span class="stat-card-label">Feature flags</span>
+    </div>
     <div class="stat-card uptime">
       <span class="stat-card-num"><span class="stat-dot"></span><%= uptime %></span>
       <span class="stat-card-label">Uptime serveur</span>
@@ -83,6 +87,21 @@
         <p class="nav-card-title">Cloud Saves</p>
         <p class="nav-card-desc">Gestion des sauvegardes joueurs, versions et slots par jeu</p>
         <p class="nav-card-url">/dashboard/saves</p>
+      </div>
+    </a>
+
+    <a href="/dashboard/feature-interruptors" class="nav-card">
+      <div class="nav-card-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18.36 6.64A9 9 0 1 1 5.64 18.36"/>
+          <circle cx="12" cy="12" r="1"/>
+          <line x1="12" y1="8" x2="12" y2="2"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <p class="nav-card-title">Feature Interruptor</p>
+        <p class="nav-card-desc">Activer / désactiver des fonctionnalités à distance pour vos apps et jeux</p>
+        <p class="nav-card-url">/dashboard/feature-interruptors</p>
       </div>
     </a>
 
