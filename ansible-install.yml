@@ -54,8 +54,10 @@
       hostname: "{{ host }}"
       state: started
       restart_policy: always
-      ports:
-        - "4000:4000"
+      exposed_ports :
+        - 4000
+      volumes:
+        - lasback_data:/opt/lasback/lasback-main
       env:
         NODE_ENV: "production"
         PORT: "4000"
