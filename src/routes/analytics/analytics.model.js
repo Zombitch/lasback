@@ -23,7 +23,7 @@ const eventSchema = new mongoose.Schema(
     category: { type: String, trim: true, maxlength: 100 }, // gameplay, ui, shop, auth...
 
     // Optional numeric / timing data
-    value: { type: Number },
+    value: { type: String },
     duration: { type: Number }, // duration in ms
 
     // Flexible payload (arbitrary key-value store)
