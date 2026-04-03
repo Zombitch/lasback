@@ -66,20 +66,9 @@ export async function postEvent(req, res) {
     metadata,
   } = req.body ?? {};
 
-  if (!action || typeof action !== 'string' || action.trim() === '') {
-    return res.status(400).json({
-      success: false,
-      message: '`action` is required and must be a non-empty string',
-    });
-  }
-
   // Numeric fields — reject NaN / non-numbers
-  const numValue = value !== undefined ? Number(value) : undefined;
   const numDuration = duration !== undefined ? Number(duration) : undefined;
 
-  if (value !== undefined && isNaN(numValue)) {
-    return res.status(400).json({ success: false, message: '`value` must be a number' });
-  }
   if (duration !== undefined && isNaN(numDuration)) {
     return res.status(400).json({ success: false, message: '`duration` must be a number' });
   }
@@ -100,7 +89,7 @@ export async function postEvent(req, res) {
     platform: platform?.toString().trim().slice(0, 50),
     action: action.trim().slice(0, 200),
     category: category?.toString().trim().slice(0, 100),
-    value: numValue,
+    value,
     duration: numDuration,
     metadata: sanitizeMetadata(metadata),
   });
