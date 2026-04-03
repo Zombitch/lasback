@@ -66,6 +66,13 @@ export async function postEvent(req, res) {
     metadata,
   } = req.body ?? {};
 
+  if (!action || typeof action !== 'string' || action.trim() === '') {
+    return res.status(400).json({
+      success: false,
+      message: '`action` is required and must be a non-empty string',
+    });
+  }
+
   // Numeric fields — reject NaN / non-numbers
   const numDuration = duration !== undefined ? Number(duration) : undefined;
 
