@@ -1,0 +1,263 @@
+<%- include('../partials/header') %>
+
+  <main class="content">
+    <section class="dashboard-header">
+      <p class="section-label dashboard-kicker">Insights</p>
+      <a class="back-link" href="/dashboard/analytics">&larr; Back to analytics</a>
+      <h1>Source: <%= source %></h1>
+      <p class="dashboard-sub">All events recorded for this source</p>
+      <div class="total"><%= total.toLocaleString('fr-FR') %> event<%= total === 1 ? '' : 's' %></div>
+    </section>
+
+    <section class="analytics-toolbar">
+      <form class="source-filter-form" method="get" action="/dashboard/analytics/source/<%= encodeURIComponent(source) %>">
+        <div class="source-filter-grid">
+          <div class="filter-field">
+            <label for="f-userId">User ID</label>
+            <input type="text" id="f-userId" name="userId" class="filter-input" value="<%= filters.userId %>" placeholder="Any user" />
+          </div>
+
+          <div class="filter-field">
+            <label for="f-platform">Platform</label>
+            <select id="f-platform" name="platform" class="filter-input">
+              <option value="">All platforms</option>
+              <% platforms.forEach(p => { %>
+                <option value="<%= p %>" <%= filters.platform === p ? 'selected' : '' %>><%= p %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="f-version">Version</label>
+            <select id="f-version" name="version" class="filter-input">
+              <option value="">All versions</option>
+              <% versions.forEach(v => { %>
+                <option value="<%= v %>" <%= filters.version === v ? 'selected' : '' %>><%= v %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="f-from">From</label>
+            <input type="date" id="f-from" name="from" class="filter-input" value="<%= filters.from %>" />
+          </div>
+
+          <div class="filter-field">
+            <label for="f-to">To</label>
+            <input type="date" id="f-to" name="to" class="filter-input" value="<%= filters.to %>" />
+          </div>
+
+          <div class="filter-field filter-field-actions">
+            <button type="submit" class="fi-btn fi-btn-create">Apply filters</button>
+            <a href="/dashboard/analytics/source/<%= encodeURIComponent(source) %>" class="filter-clear">Clear</a>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <% if (events.length === 0) { %>
+      <div class="no-data">No events match these filters</div>
+    <% } else { %>
+      <div class="event-list">
+        <div class="event-list-head" aria-hidden="true">
+          <div>Date</div>
+          <div>User ID</div>
+          <div>Action</div>
+          <div>Category</div>
+          <div>Country</div>
+          <div>Platform</div>
+          <div>Version</div>
+          <div>Metadata</div>
+        </div>
+
+        <% events.forEach((ev, i) => {
+             const hasMeta = ev.metadata && typeof ev.metadata === 'object' && Object.keys(ev.metadata).length > 0;
+        %>
+          <article class="event-card">
+            <div class="event-card-row">
+              <span class="event-field-label">Date</span>
+              <span class="event-field-value timestamp"><%= new Date(ev.createdAt).toLocaleString('fr-FR') %></span>
+            </div>
+            <div class="event-card-row">
+              <span class="event-field-label">User ID</span>
+              <span class="event-field-value"><%= ev.userId || '—' %></span>
+            </div>
+            <div class="event-card-row">
+              <span class="event-field-label">Action</span>
+              <span class="event-field-value"><%= ev.action || '—' %></span>
+            </div>
+            <div class="event-card-row">
+              <span class="event-field-label">Category</span>
+              <span class="event-field-value"><%= ev.category || '—' %></span>
+            </div>
+            <div class="event-card-row">
+              <span class="event-field-label">Country</span>
+              <span class="event-field-value"><%= ev.country || '—' %></span>
+            </div>
+            <div class="event-card-row">
+              <span class="event-field-label">Platform</span>
+              <span class="event-field-value"><%= ev.platform || '—' %></span>
+            </div>
+            <div class="event-card-row">
+              <span class="event-field-label">Version</span>
+              <span class="event-field-value"><%= ev.version || '—' %></span>
+            </div>
+            <div class="event-card-row">
+              <span class="event-field-label">Metadata</span>
+              <span class="event-field-value">
+                <% if (hasMeta) { %>
+                  <button type="button" class="json-view-btn" data-action="view-json" data-index="<%= i %>">View JSON</button>
+                <% } else { %>
+                  &mdash;
+                <% } %>
+              </span>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+
+      <% if (pages > 1) { %>
+        <%
+          const qs = (p) => {
+            const params = new URLSearchParams();
+            if (filters.userId) params.set('userId', filters.userId);
+            if (filters.platform) params.set('platform', filters.platform);
+            if (filters.version) params.set('version', filters.version);
+            if (filters.from) params.set('from', filters.from);
+            if (filters.to) params.set('to', filters.to);
+            params.set('page', p);
+            return '?' + params.toString();
+          };
+        %>
+        <nav class="pagination">
+          <a class="page-link <%= page <= 1 ? 'disabled' : '' %>" href="<%= page <= 1 ? '#' : qs(page - 1) %>">&larr; Prev</a>
+          <span class="page-info">Page <%= page %> / <%= pages %></span>
+          <a class="page-link <%= page >= pages ? 'disabled' : '' %>" href="<%= page >= pages ? '#' : qs(page + 1) %>">Next &rarr;</a>
+        </nav>
+      <% } %>
+    <% } %>
+  </main>
+
+  <!-- JSON viewer modal -->
+  <div id="json-modal" class="fi-modal json-modal" style="display:none">
+    <div class="fi-modal-content json-modal-content">
+      <div class="json-modal-header">
+        <h3>Event metadata</h3>
+        <button type="button" class="json-modal-close" id="json-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="json-modal-toolbar">
+        <button type="button" class="fi-btn fi-btn-cancel" id="json-expand-all">Expand all</button>
+        <button type="button" class="fi-btn fi-btn-cancel" id="json-collapse-all">Collapse all</button>
+        <button type="button" class="fi-btn fi-btn-create" id="json-copy">Copy JSON</button>
+      </div>
+      <div id="json-tree" class="json-tree"></div>
+    </div>
+  </div>
+
+  <script>
+    // Metadata payloads for the events on this page, indexed the same as data-index.
+    const eventMetadata = <%- JSON.stringify(events.map(e => e.metadata ?? null)).replace(/</g, '\\u003c') %>;
+
+    let currentMetadata = null;
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[c]));
+    }
+
+    function renderJsonValue(value, keyLabel, depth = 0) {
+      const isContainer = value !== null && typeof value === 'object';
+      const keyHtml = keyLabel !== undefined
+        ? `<span class="json-key">${escapeHtml(keyLabel)}</span><span class="json-punct">: </span>`
+        : '';
+
+      if (!isContainer) {
+        const row = document.createElement('div');
+        row.className = 'json-leaf-row';
+        let valueHtml;
+        if (typeof value === 'string') valueHtml = `<span class="json-string">"${escapeHtml(value)}"</span>`;
+        else if (typeof value === 'number') valueHtml = `<span class="json-number">${value}</span>`;
+        else if (typeof value === 'boolean') valueHtml = `<span class="json-boolean">${value}</span>`;
+        else valueHtml = `<span class="json-null">null</span>`;
+        row.innerHTML = keyHtml + valueHtml;
+        return row;
+      }
+
+      const isArray = Array.isArray(value);
+      const entries = isArray ? value.map((v, i) => [i, v]) : Object.entries(value);
+
+      const details = document.createElement('details');
+      details.className = 'json-node';
+      details.open = depth === 0;
+
+      const summary = document.createElement('summary');
+      const countLabel = `${entries.length} ${isArray ? 'item' : 'key'}${entries.length === 1 ? '' : 's'}`;
+      summary.innerHTML = keyHtml +
+        `<span class="json-punct">${isArray ? '[' : '{'}</span>` +
+        `<span class="json-type-count">${countLabel}</span>` +
+        `<span class="json-punct">${isArray ? ']' : '}'}</span>`;
+      details.appendChild(summary);
+
+      const nested = document.createElement('div');
+      nested.className = 'json-node-nested';
+      entries.forEach(([k, v]) => {
+        nested.appendChild(renderJsonValue(v, k, depth + 1));
+      });
+      details.appendChild(nested);
+
+      return details;
+    }
+
+    function openJsonModal(metadata) {
+      currentMetadata = metadata;
+      const tree = document.getElementById('json-tree');
+      tree.innerHTML = '';
+      tree.appendChild(renderJsonValue(metadata, undefined, 0));
+      document.getElementById('json-modal').style.display = 'flex';
+    }
+
+    function closeJsonModal() {
+      document.getElementById('json-modal').style.display = 'none';
+    }
+
+    document.addEventListener('click', (e) => {
+      const viewBtn = e.target.closest('[data-action="view-json"]');
+      if (viewBtn) {
+        openJsonModal(eventMetadata[Number(viewBtn.dataset.index)]);
+        return;
+      }
+      if (e.target.id === 'json-modal') {
+        closeJsonModal();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeJsonModal();
+    });
+
+    document.getElementById('json-close').addEventListener('click', closeJsonModal);
+
+    document.getElementById('json-expand-all').addEventListener('click', () => {
+      document.querySelectorAll('#json-tree details').forEach((d) => { d.open = true; });
+    });
+
+    document.getElementById('json-collapse-all').addEventListener('click', () => {
+      document.querySelectorAll('#json-tree details').forEach((d) => { d.open = false; });
+    });
+
+    document.getElementById('json-copy').addEventListener('click', async () => {
+      const btn = document.getElementById('json-copy');
+      try {
+        await navigator.clipboard.writeText(JSON.stringify(currentMetadata, null, 2));
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      } catch {
+        btn.textContent = 'Copy failed';
+        setTimeout(() => { btn.textContent = 'Copy JSON'; }, 1500);
+      }
+    });
+  </script>
+
+<%- include('../partials/footer') %>

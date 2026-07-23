@@ -91,6 +91,67 @@ export async function viewVisits(req, res) {
   }
 }
 
+function buildDateFilter(from, to) {
+  const dateFilter = {};
+  if (from) {
+    const d = new Date(from);
+    if (!isNaN(d)) dateFilter.$gte = d;
+  }
+  if (to) {
+    const d = new Date(to);
+    if (!isNaN(d)) {
+      d.setHours(23, 59, 59, 999);
+      dateFilter.$lte = d;
+    }
+  }
+  return dateFilter;
+}
+
+export async function viewSourceEvents(req, res, next) {
+  try {
+    const { source } = req.params;
+    const { userId, platform, version, from, to, page = 1 } = req.query;
+
+    const filter = { source };
+    if (userId) filter.userId = userId.trim();
+    if (platform) filter.platform = platform;
+    if (version) filter.version = version;
+
+    const dateFilter = buildDateFilter(from, to);
+    if (Object.keys(dateFilter).length) filter.createdAt = dateFilter;
+
+    const limitNum = 50;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [events, total, platforms, versions] = await Promise.all([
+      Event.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+      Event.countDocuments(filter),
+      Event.distinct('platform', { source }),
+      Event.distinct('version', { source }),
+    ]);
+
+    res.render('dashboard-source-events', {
+      source,
+      events,
+      total,
+      page: pageNum,
+      pages: Math.max(1, Math.ceil(total / limitNum)),
+      platforms: platforms.filter(Boolean).sort(),
+      versions: versions.filter(Boolean).sort(),
+      filters: {
+        userId: userId || '',
+        platform: platform || '',
+        version: version || '',
+        from: from || '',
+        to: to || '',
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function viewAnalytics(req, res, next) {
   try {
     const { source } = req.query;
