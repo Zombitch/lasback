@@ -34,7 +34,11 @@
         <% } else { %>
           <% bySource.forEach(row => { %>
             <div class="stat-row">
-              <span class="stat-label"><%= row._id || '(none)' %></span>
+              <% if (row._id) { %>
+                <a class="stat-label stat-label-link" href="/dashboard/analytics/source/<%= encodeURIComponent(row._id) %>"><%= row._id %></a>
+              <% } else { %>
+                <span class="stat-label">(none)</span>
+              <% } %>
               <span class="stat-count"><%= row.count %></span>
             </div>
           <% }) %>
