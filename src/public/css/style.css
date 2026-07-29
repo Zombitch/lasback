@@ -1039,6 +1039,18 @@ td {
 
   .event-field-label { display: none; }
   .event-field-value { text-align: left; }
+
+  /* Rank submissions list has its own column count (varies when a value
+     filter adds a "Matched" column), so it can't share .event-list's
+     fixed 8-column template — mismatched column counts made rows drift
+     across grid lines, spilling data into the header row. */
+  .rank-list {
+    grid-template-columns: 150px 110px 90px 150px 1fr 110px;
+  }
+
+  .rank-list.rank-list-matched {
+    grid-template-columns: 150px 110px 90px 150px 160px 1fr 110px;
+  }
 }
 
 /* ── TOTP pages ────────────────────────────────────────────── */

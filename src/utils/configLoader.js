@@ -53,4 +53,17 @@ export const config = {
   jwtSecret: getSecret('JWT_SECRET'),
 
   jwtExpiresIn: getEnvVar('JWT_EXPIRES_IN', { required: false }) || '7d',
+
+  /**
+   * One-time bootstrap token required to complete initial TOTP enrollment
+   * (POST/GET /totp/setup while no admin TOTP exists yet).
+   *
+   * Without this, the very first person to reach /totp/setup on a fresh
+   * deployment — not necessarily the real operator — permanently becomes
+   * the admin and locks everyone else out. Required in production; optional
+   * in dev so local setup stays frictionless.
+   */
+  totpSetupToken: isProd
+    ? getEnvVar('TOTP_SETUP_TOKEN')
+    : getEnvVar('TOTP_SETUP_TOKEN', { required: false }) || null,
 };

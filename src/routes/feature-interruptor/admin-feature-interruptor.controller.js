@@ -18,10 +18,10 @@ export async function listFeatures(_req, res) {
 export async function createFeature(req, res) {
   const { appId, appName, featureId, featureName, value } = req.body ?? {};
 
-  if (!appId || !featureId) {
+  if (typeof appId !== 'string' || !appId || typeof featureId !== 'string' || !featureId) {
     return res.status(400).json({
       success: false,
-      message: '`appId` and `featureId` are required',
+      message: '`appId` and `featureId` are required and must be strings',
     });
   }
 
@@ -67,10 +67,30 @@ export async function updateFeature(req, res) {
     });
   }
 
-  if (appId !== undefined) feature.appId = appId.trim();
-  if (appName !== undefined) feature.appName = appName.trim();
-  if (featureId !== undefined) feature.featureId = featureId.trim();
-  if (featureName !== undefined) feature.featureName = featureName.trim();
+  if (appId !== undefined) {
+    if (typeof appId !== 'string') {
+      return res.status(400).json({ success: false, message: '`appId` must be a string' });
+    }
+    feature.appId = appId.trim();
+  }
+  if (appName !== undefined) {
+    if (typeof appName !== 'string') {
+      return res.status(400).json({ success: false, message: '`appName` must be a string' });
+    }
+    feature.appName = appName.trim();
+  }
+  if (featureId !== undefined) {
+    if (typeof featureId !== 'string') {
+      return res.status(400).json({ success: false, message: '`featureId` must be a string' });
+    }
+    feature.featureId = featureId.trim();
+  }
+  if (featureName !== undefined) {
+    if (typeof featureName !== 'string') {
+      return res.status(400).json({ success: false, message: '`featureName` must be a string' });
+    }
+    feature.featureName = featureName.trim();
+  }
   if (typeof value === 'boolean') feature.value = value;
 
   await feature.save();

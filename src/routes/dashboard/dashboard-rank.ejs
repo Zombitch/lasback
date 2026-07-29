@@ -70,13 +70,17 @@
     <% if (ranks.length === 0) { %>
       <div class="no-data">No rank submissions match these filters</div>
     <% } else { %>
-      <div class="event-list">
+      <div class="event-list rank-list<%= filters.value ? ' rank-list-matched' : '' %>">
         <div class="event-list-head" aria-hidden="true">
           <div>Date</div>
           <div>Source</div>
           <div>Version</div>
           <div>User ID</div>
+          <% if (filters.value) { %>
+            <div>Matched</div>
+          <% } %>
           <div>Values</div>
+          <div>Details</div>
         </div>
 
         <% ranks.forEach((r) => { %>

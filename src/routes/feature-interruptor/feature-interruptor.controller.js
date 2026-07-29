@@ -8,7 +8,7 @@ import { FeatureInterruptor } from './feature-interruptor.model.js';
 export async function getFeature(req, res) {
   const { appId, featureId } = req.query;
 
-  if (!appId || !featureId) {
+  if (typeof appId !== 'string' || !appId || typeof featureId !== 'string' || !featureId) {
     return res.status(400).json({
       success: false,
       message: '`appId` and `featureId` query parameters are required',

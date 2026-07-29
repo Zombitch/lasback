@@ -34,6 +34,9 @@
     <% } %>
 
     <form method="POST" action="/totp/setup" autocomplete="off">
+      <% if (typeof setupToken !== 'undefined' && setupToken) { %>
+        <input type="hidden" name="token" value="<%= setupToken %>" />
+      <% } %>
       <label for="code">Code de vérification</label>
       <input
         type="text"

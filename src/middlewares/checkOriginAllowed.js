@@ -27,7 +27,7 @@ export function checkOriginAllowed(req, res, next) {
   const candidate = originHeader || derivedOrigin;
   const allowed = config.corsAllowedOrigins.includes(candidate) || config.corsAllowedOrigins.includes('*');
 
-  if (!allowed) {
+  if (originHeader && !allowed) {
     return res.status(403).json({
       success: false,
       message: 'Origin not allowed',

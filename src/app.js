@@ -140,11 +140,6 @@ const limiter = rateLimit({
 app.use(limiter);
 
 /**
- * Prevent HTTP Parameter Pollution
- */
-app.use(hpp());
-
-/**
  * Gzip/deflate responses
  */
 app.use(compression());
@@ -181,6 +176,15 @@ app.use(
  */
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+/**
+ * Prevent HTTP Parameter Pollution
+ *
+ * Must run after the body parsers above so it can actually dedupe polluted
+ * `req.body`/`req.query` values (e.g. urlencoded form fields repeated as
+ * `code=1&code=2`) instead of running against an unparsed body.
+ */
+app.use(hpp());
 
 /**
  * Session (required for TOTP verification state)

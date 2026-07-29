@@ -4,6 +4,8 @@ import QRCode from 'qrcode';
 import rateLimit from 'express-rate-limit';
 import { Totp } from './totp.model.js';
 import { logger } from '../../utils/logger.js';
+import { config } from '../../utils/configLoader.js';
+import { timingSafeEqual } from '../../middlewares/apiKeyAuth.js';
 
 const router = Router();
 
@@ -43,6 +45,11 @@ router.get('/setup', async (req, res, next) => {
       return res.redirect('/totp/verify');
     }
 
+    if (config.totpSetupToken && !timingSafeEqual(config.totpSetupToken, typeof req.query.token === 'string' ? req.query.token : '')) {
+      logger.warn('[TOTP-SETUP] Rejected GET /setup: missing/invalid setup token');
+      return res.status(403).send('A valid setup token is required to initialize TOTP. Append ?token=<TOTP_SETUP_TOKEN> to this URL.');
+    }
+
     // Reuse the pending secret when one already lives in the session,
     // so a second GET (browser prefetch, favicon, refresh…) does NOT
     // overwrite the secret the user already scanned.
@@ -74,6 +81,7 @@ router.get('/setup', async (req, res, next) => {
     res.render('totp-setup', {
       qrDataUrl,
       secret: secret.base32,
+      setupToken: typeof req.query.token === 'string' ? req.query.token : '',
     });
   } catch (err) {
     next(err);
@@ -88,6 +96,11 @@ router.post('/setup', totpLimiter, async (req, res, next) => {
     const count = await Totp.countDocuments();
     if (count > 0) {
       return res.redirect('/totp/verify');
+    }
+
+    if (config.totpSetupToken && !timingSafeEqual(config.totpSetupToken, typeof req.body.token === 'string' ? req.body.token : '')) {
+      logger.warn('[TOTP-SETUP] Rejected POST /setup: missing/invalid setup token');
+      return res.status(403).json({ success: false, message: 'A valid setup token is required to initialize TOTP.' });
     }
 
     const rawCode = req.body.code;
@@ -121,6 +134,7 @@ router.post('/setup', totpLimiter, async (req, res, next) => {
       return res.render('totp-setup', {
         qrDataUrl,
         secret: pendingSecret,
+        setupToken: typeof req.body.token === 'string' ? req.body.token : '',
         error: 'Code invalide. Veuillez réessayer.',
       });
     }

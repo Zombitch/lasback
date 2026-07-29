@@ -207,7 +207,7 @@
   }
 
   // ── Edit modal ─────────────────────────────────────────────
-  let allFeatures = <%- JSON.stringify(Object.values(grouped).flat()) %>;
+  let allFeatures = <%- JSON.stringify(Object.values(grouped).flat()).replace(/</g, '\\u003c') %>;
 
   function editFeature(id) {
     const f = allFeatures.find(x => x._id === id);

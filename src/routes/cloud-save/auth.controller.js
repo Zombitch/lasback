@@ -3,6 +3,12 @@ import jwt from 'jsonwebtoken';
 import { Player } from './player.model.js';
 import { config } from '../../utils/configLoader.js';
 
+// Computed once at startup and compared against on every login where the
+// account doesn't exist, so a missing account takes the same time as a
+// wrong password — otherwise the bcrypt.compare skip is a timing oracle
+// an attacker can use to enumerate registered emails.
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync('not-a-real-account', 12);
+
 function signToken(player) {
   return jwt.sign(
     { sub: player._id, username: player.username },
@@ -100,22 +106,18 @@ export async function login(req, res) {
     });
   }
 
-  if (typeof password !== 'string' || password.length > 72) {
+  if (typeof email !== 'string' || typeof password !== 'string' || password.length > 72) {
     return res.status(401).json({ success: false, message: 'Invalid credentials' });
   }
 
   const player = await Player.findOne({ email: email.toLowerCase().trim() });
 
-  if (!player) {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid credentials',
-    });
-  }
+  // Always run bcrypt.compare, even for a non-existent account, against a
+  // fixed dummy hash — keeps response time constant so it can't be used to
+  // enumerate which emails are registered.
+  const valid = await bcrypt.compare(password, player ? player.passwordHash : DUMMY_PASSWORD_HASH);
 
-  const valid = await bcrypt.compare(password, player.passwordHash);
-
-  if (!valid) {
+  if (!player || !valid) {
     return res.status(401).json({
       success: false,
       message: 'Invalid credentials',

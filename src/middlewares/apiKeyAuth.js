@@ -5,7 +5,7 @@ import { config } from '../utils/configLoader.js';
  * Timing-safe comparison of two strings.
  * Prevents timing side-channel attacks on API key validation.
  */
-function timingSafeEqual(a, b) {
+export function timingSafeEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
   const bufA = Buffer.from(a);
   const bufB = Buffer.from(b);
