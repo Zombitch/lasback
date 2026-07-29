@@ -647,6 +647,13 @@ td {
   min-width: 0;
 }
 
+/* Native date pickers don't need to stretch to fill their column —
+   left at 100% they render as a mostly-empty oversized box. */
+.filter-field input[type="date"].filter-input {
+  width: auto;
+  max-width: 160px;
+}
+
 .filter-field-actions {
   flex-direction: row;
   flex-wrap: wrap;
