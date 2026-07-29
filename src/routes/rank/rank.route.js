@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { postRank } from './rank.controller.js';
+import { postRank, getRank } from './rank.controller.js';
 
 /**
  * Dedicated rate limiter for the rank endpoint.
@@ -26,5 +26,12 @@ router.use(rankLimiter);
  * Requires: x-api-key header + allowed Origin.
  */
 router.post('/', postRank);
+
+/**
+ * GET /rank
+ * Look up a userId's rank for a given label, plus 5 entries before/after.
+ * Requires: x-api-key header + allowed Origin.
+ */
+router.get('/', getRank);
 
 export default router;

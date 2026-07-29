@@ -70,3 +70,53 @@ export async function postRank(req, res) {
     timestamp: rank.createdAt,
   });
 }
+
+/**
+ * GET /rank
+ *
+ * Look up a userId's rank among all submissions carrying the given label,
+ * sorted by that label's value (highest first), along with the 5 entries
+ * ranked immediately above and the 5 ranked immediately below.
+ *
+ * Query params: userId, label (both required)
+ */
+export async function getRank(req, res, next) {
+  try {
+    const { userId, label } = req.query;
+
+    if (!userId || !label) {
+      return res
+        .status(400)
+        .json({ success: false, message: '`userId` and `label` are required query params' });
+    }
+
+    const entries = await Rank.aggregate([
+      { $addFields: { __idx: { $indexOfArray: ['$labels', label] } } },
+      { $match: { __idx: { $ne: -1 } } },
+      { $addFields: { __value: { $arrayElemAt: ['$values', '$__idx'] } } },
+      { $sort: { __value: -1 } },
+      { $project: { _id: 0, userId: 1, value: '$__value' } },
+    ]);
+
+    const targetIndex = entries.findIndex((e) => e.userId === userId);
+
+    if (targetIndex === -1) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'No submission found for this userId and label' });
+    }
+
+    return res.json({
+      success: true,
+      userId,
+      label,
+      rank: targetIndex + 1,
+      total: entries.length,
+      value: entries[targetIndex].value,
+      before: entries.slice(Math.max(0, targetIndex - 5), targetIndex),
+      after: entries.slice(targetIndex + 1, targetIndex + 6),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
