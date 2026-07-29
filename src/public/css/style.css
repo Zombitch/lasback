@@ -862,6 +862,117 @@ td {
   word-break: break-word;
 }
 
+/* ── API reference cards + popin ──────────────────────────── */
+.nav-card-api {
+  position: relative;
+}
+
+.nav-card-api-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+}
+
+.api-modal-content {
+  max-width: 92vw;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 1rem 1.1rem;
+}
+
+.api-endpoint {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.api-endpoint code {
+  font-size: 0.88rem;
+  word-break: break-all;
+}
+
+.api-method {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.api-method-POST { background: rgba(91, 140, 255, 0.15); color: #5B8CFF; }
+.api-method-GET  { background: rgba(34, 197, 94, 0.15);  color: #22c55e; }
+
+.api-description {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.api-info-section {
+  margin-bottom: 1rem;
+}
+
+.api-info-section h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.api-kv-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.82rem;
+  color: #cbd5e1;
+}
+
+.api-kv-list li {
+  padding: 0.2rem 0;
+}
+
+.api-kv-value {
+  color: #94a3b8;
+}
+
+.api-code-block {
+  background: #060d1c;
+  border: 1px solid #1e2d4a;
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+  overflow-x: auto;
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  margin: 0;
+}
+
+.api-note {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+  font-size: 0.8rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .api-modal-content { max-width: 640px; padding: 1.5rem; }
+}
+
 /* ── Wider viewports: filter grid columns + table-like event list ── */
 @media (min-width: 640px) {
   .source-filter-grid {

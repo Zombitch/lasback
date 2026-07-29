@@ -132,7 +132,8 @@
       </div>
     </a>
 
-    <div class="nav-card" style="opacity: 0.45; cursor: default;">
+    <div class="nav-card nav-card-api" data-api-id="analytics-event" role="button" tabindex="0" aria-haspopup="dialog">
+      <span class="nav-card-api-badge">API</span>
       <div class="nav-card-icon amber">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
@@ -147,7 +148,8 @@
       </div>
     </div>
 
-    <div class="nav-card" style="opacity: 0.45; cursor: default;">
+    <div class="nav-card nav-card-api" data-api-id="analytics-stats" role="button" tabindex="0" aria-haspopup="dialog">
+      <span class="nav-card-api-badge">API</span>
       <div class="nav-card-icon amber">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -164,6 +166,196 @@
       </div>
     </div>
 
+    <div class="nav-card nav-card-api" data-api-id="rank" role="button" tabindex="0" aria-haspopup="dialog">
+      <span class="nav-card-api-badge">API</span>
+      <div class="nav-card-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <p class="nav-card-title">API — POST /rank</p>
+        <p class="nav-card-desc">Envoyer une soumission de valeurs classées. Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code></p>
+        <p class="nav-card-url">/rank</p>
+      </div>
+    </div>
+
   </div>
+
+  <!-- API reference popin -->
+  <div id="api-info-modal" class="fi-modal" style="display:none">
+    <div class="fi-modal-content api-modal-content">
+      <div class="json-modal-header">
+        <h3 id="api-info-title">API reference</h3>
+        <button type="button" class="json-modal-close" id="api-info-close" aria-label="Close">&times;</button>
+      </div>
+      <div id="api-info-body" class="api-info-body"></div>
+    </div>
+  </div>
+
+  <script>
+    const apiSpecs = {
+      'analytics-event': {
+        method: 'POST',
+        endpoint: '/analytics/event',
+        description: "Enregistre un événement analytics (action utilisateur, in-game, etc.).",
+        headers: [
+          { name: 'x-api-key', value: '<votre clé API>' },
+          { name: 'Content-Type', value: 'application/json' },
+        ],
+        body: {
+          source: 'my-game',
+          version: '1.0.0',
+          userId: 'player-123',
+          sessionId: 'a1b2c3d4',
+          action: 'level_up',
+          category: 'gameplay',
+          platform: 'web',
+          value: '42',
+          duration: 1500,
+          metadata: { level: 5 },
+        },
+        bodyNote: 'Seul `action` est obligatoire, tous les autres champs sont optionnels.',
+        response: {
+          success: true,
+          id: '6650f1a2b3c4d5e6f7089012',
+          timestamp: '2026-07-29T12:00:00.000Z',
+        },
+      },
+      'analytics-stats': {
+        method: 'GET',
+        endpoint: '/analytics/stats?source=my-game&from=2026-01-01&to=2026-07-29',
+        description: "Retourne des statistiques agrégées (par source, action, pays, plateforme, jour…).",
+        headers: [
+          { name: 'x-api-key', value: '<votre clé API>' },
+        ],
+        query: [
+          { name: 'source', note: 'optionnel — filtre par source' },
+          { name: 'from', note: 'optionnel — date ISO (incluse)' },
+          { name: 'to', note: 'optionnel — date ISO (incluse)' },
+        ],
+        response: {
+          success: true,
+          total: 1523,
+          uniqueUsers: 340,
+          uniqueSessions: 512,
+          avgValue: 27.4,
+          avgDuration: 842,
+          totalDuration: 128000,
+          bySource: [{ _id: 'my-game', count: 1523 }],
+          byAction: [{ _id: 'level_up', count: 210 }],
+          byDay: [{ _id: '2026-07-29', count: 12 }],
+        },
+      },
+      rank: {
+        method: 'POST',
+        endpoint: '/rank',
+        description: "Enregistre une soumission de valeurs classées (score, stats…) associées à des labels.",
+        headers: [
+          { name: 'x-api-key', value: '<votre clé API>' },
+          { name: 'Content-Type', value: 'application/json' },
+        ],
+        body: {
+          source: 'my-game',
+          version: '1.0.0',
+          userId: 'player-123',
+          values: [10, 42, 3],
+          labels: ['strength', 'speed', 'luck'],
+        },
+        bodyNote: '`values` et `labels` doivent être des tableaux de même taille : values[i] correspond à labels[i].',
+        response: {
+          success: true,
+          id: '6650f1a2b3c4d5e6f7089099',
+          timestamp: '2026-07-29T12:00:00.000Z',
+        },
+      },
+    };
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[c]));
+    }
+
+    function renderApiInfo(spec) {
+      const parts = [];
+
+      parts.push(
+        `<div class="api-endpoint"><span class="api-method api-method-${escapeHtml(spec.method)}">${escapeHtml(spec.method)}</span><code>${escapeHtml(spec.endpoint)}</code></div>`
+      );
+
+      if (spec.description) {
+        parts.push(`<p class="api-description">${escapeHtml(spec.description)}</p>`);
+      }
+
+      if (spec.headers && spec.headers.length) {
+        parts.push(
+          '<div class="api-info-section"><h4>Headers requis</h4><ul class="api-kv-list">' +
+            spec.headers.map((h) => `<li><code>${escapeHtml(h.name)}</code>: <span class="api-kv-value">${escapeHtml(h.value)}</span></li>`).join('') +
+            '</ul></div>'
+        );
+      }
+
+      if (spec.query && spec.query.length) {
+        parts.push(
+          '<div class="api-info-section"><h4>Query params</h4><ul class="api-kv-list">' +
+            spec.query.map((q) => `<li><code>${escapeHtml(q.name)}</code> — <span class="api-kv-value">${escapeHtml(q.note)}</span></li>`).join('') +
+            '</ul></div>'
+        );
+      }
+
+      if (spec.body) {
+        parts.push(
+          `<div class="api-info-section"><h4>Exemple de body JSON</h4><pre class="api-code-block"><code>${escapeHtml(JSON.stringify(spec.body, null, 2))}</code></pre></div>`
+        );
+      }
+
+      if (spec.bodyNote) {
+        parts.push(`<div class="api-note">${escapeHtml(spec.bodyNote)}</div>`);
+      }
+
+      if (spec.response) {
+        parts.push(
+          `<div class="api-info-section"><h4>Exemple de réponse</h4><pre class="api-code-block"><code>${escapeHtml(JSON.stringify(spec.response, null, 2))}</code></pre></div>`
+        );
+      }
+
+      return parts.join('');
+    }
+
+    function openApiModal(apiId) {
+      const spec = apiSpecs[apiId];
+      if (!spec) return;
+      document.getElementById('api-info-title').textContent = `${spec.method} ${spec.endpoint.split('?')[0]}`;
+      document.getElementById('api-info-body').innerHTML = renderApiInfo(spec);
+      document.getElementById('api-info-modal').style.display = 'flex';
+    }
+
+    function closeApiModal() {
+      document.getElementById('api-info-modal').style.display = 'none';
+    }
+
+    document.addEventListener('click', (e) => {
+      const card = e.target.closest('[data-api-id]');
+      if (card) {
+        openApiModal(card.dataset.apiId);
+        return;
+      }
+      if (e.target.id === 'api-info-modal') closeApiModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeApiModal();
+        return;
+      }
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-api-id]')) {
+        e.preventDefault();
+        openApiModal(e.target.dataset.apiId);
+      }
+    });
+
+    document.getElementById('api-info-close').addEventListener('click', closeApiModal);
+  </script>
 
 <%- include('../partials/footer') %>
