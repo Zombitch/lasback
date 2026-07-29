@@ -631,6 +631,7 @@ td {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  min-width: 0;
 }
 
 .filter-field label {
@@ -643,6 +644,7 @@ td {
 .filter-field .filter-input {
   width: 100%;
   max-width: none;
+  min-width: 0;
 }
 
 .filter-field-actions {
