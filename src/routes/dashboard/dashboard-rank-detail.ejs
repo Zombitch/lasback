@@ -1,0 +1,49 @@
+<%- include('../partials/header') %>
+
+  <main class="content">
+    <% if (error) { %>
+      <div class="no-data"><%= error %></div>
+      <a href="/dashboard/rank" class="back-link">&larr; Back to rank submissions</a>
+    <% } else { %>
+
+    <section class="dashboard-header">
+      <p class="section-label dashboard-kicker">Insights</p>
+      <a class="back-link" href="/dashboard/rank">&larr; Back to rank submissions</a>
+      <h1>Rank Submission</h1>
+      <p class="dashboard-sub">
+        Source: <strong><%= rank.source || '—' %></strong> &mdash;
+        Version: <strong><%= rank.version || '—' %></strong> &mdash;
+        User: <strong><%= rank.userId || '—' %></strong> &mdash;
+        <%= new Date(rank.createdAt).toLocaleString('fr-FR') %>
+      </p>
+    </section>
+
+    <% if (pairs.length === 0) { %>
+      <div class="no-data">No values recorded for this submission</div>
+    <% } else { %>
+      <div class="table-shell">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Label</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% pairs.forEach((p, i) => { %>
+              <tr>
+                <td class="small"><%= i %></td>
+                <td><%= p.label %></td>
+                <td class="count-cell"><%= p.value %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <% } %>
+  </main>
+
+<%- include('../partials/footer') %>

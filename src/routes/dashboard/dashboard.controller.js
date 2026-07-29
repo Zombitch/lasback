@@ -1,5 +1,6 @@
 import { Visit } from '../visit/visit.model.js';
 import { Event } from '../analytics/analytics.model.js';
+import { Rank } from '../rank/rank.model.js';
 
 export async function viewVisitsDetails(req, res) {
     const { year, month } = req.query;
@@ -211,6 +212,90 @@ export async function viewAnalytics(req, res, next) {
       sources: sources.filter(Boolean).sort(),
       activeSource: source || null,
     });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /dashboard/rank
+ *
+ * List rank submissions, filterable by source, userId, and a specific value.
+ * When filtering by value, each matching entry shows which label (by index)
+ * that value is paired with — rather than a raw array index.
+ */
+export async function viewRank(req, res, next) {
+  try {
+    const { source, userId, value, page = 1 } = req.query;
+
+    const filter = {};
+    if (source) filter.source = source;
+    if (userId) filter.userId = userId.trim();
+
+    const numValue = value !== undefined && value !== '' ? Number(value) : null;
+    const hasValueFilter = numValue !== null && !Number.isNaN(numValue);
+    if (hasValueFilter) filter.values = numValue;
+
+    const limitNum = 50;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [ranks, total, sources] = await Promise.all([
+      Rank.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+      Rank.countDocuments(filter),
+      Rank.distinct('source'),
+    ]);
+
+    // Pair each value with its label (same index) and, when a value filter
+    // is active, flag which pair matched it.
+    const entries = ranks.map((r) => {
+      const pairs = (r.labels || []).map((label, i) => ({
+        label,
+        value: r.values[i],
+        matched: hasValueFilter && r.values[i] === numValue,
+      }));
+      const matchedPair = hasValueFilter ? pairs.find((p) => p.matched) : null;
+      return {
+        ...r,
+        pairs,
+        matchedLabel: matchedPair ? matchedPair.label : null,
+      };
+    });
+
+    res.render('dashboard-rank', {
+      ranks: entries,
+      total,
+      page: pageNum,
+      pages: Math.max(1, Math.ceil(total / limitNum)),
+      sources: sources.filter(Boolean).sort(),
+      filters: {
+        source: source || '',
+        userId: userId || '',
+        value: value || '',
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /dashboard/rank/:id
+ *
+ * Show a single rank submission with its full label/value pairs.
+ */
+export async function viewRankDetail(req, res, next) {
+  try {
+    const { id } = req.params;
+    const rank = await Rank.findById(id).lean();
+
+    if (!rank) {
+      return res.status(404).render('dashboard-rank-detail', { rank: null, pairs: [], error: 'Rank entry not found' });
+    }
+
+    const pairs = (rank.labels || []).map((label, i) => ({ label, value: rank.values[i] }));
+
+    res.render('dashboard-rank-detail', { rank, pairs, error: null });
   } catch (err) {
     next(err);
   }
