@@ -25,6 +25,7 @@ import dashboardRouter from './routes/dashboard/dashboard.route.js';
 import totpRouter from './routes/totp/totp.route.js';
 import visitRouter from './routes/visit/visit.route.js';
 import analyticsRouter from './routes/analytics/analytics.route.js';
+import rankRouter from './routes/rank/rank.route.js';
 
 import cloudSaveAuthRouter from './routes/cloud-save/auth.route.js';
 import cloudSaveRouter from './routes/cloud-save/saves.route.js';
@@ -212,6 +213,7 @@ app.use('/health', healthRouter);
 // API routes are protected by API key/origin checks and must not require TOTP
 app.use('/visit', apiKeyAuth, checkOriginAllowed, visitRouter);
 app.use('/analytics', apiKeyAuth, checkOriginAllowed, analyticsRouter);
+app.use('/rank', apiKeyAuth, checkOriginAllowed, rankRouter);
 app.use('/feature-interruptor', apiKeyAuth, checkOriginAllowed, featureInterruptorRouter);
 
 // Admin JSON API (TOTP protected)
