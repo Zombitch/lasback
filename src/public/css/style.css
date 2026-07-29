@@ -763,6 +763,13 @@ td {
   font-weight: 700;
 }
 
+.value-pair.sorted {
+  background: rgba(20, 184, 166, 0.15);
+  border-color: rgba(20, 184, 166, 0.4);
+  color: #14b8a6;
+  font-weight: 700;
+}
+
 .value-pair-more {
   color: #64748b;
   font-size: 0.72rem;

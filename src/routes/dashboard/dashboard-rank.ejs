@@ -31,6 +31,34 @@
             <input type="number" step="any" id="f-value" name="value" class="filter-input" value="<%= filters.value %>" placeholder="e.g. 42" />
           </div>
 
+          <div class="filter-field">
+            <label for="f-from">From</label>
+            <input type="date" id="f-from" name="from" class="filter-input" value="<%= filters.from %>" />
+          </div>
+
+          <div class="filter-field">
+            <label for="f-to">To</label>
+            <input type="date" id="f-to" name="to" class="filter-input" value="<%= filters.to %>" />
+          </div>
+
+          <div class="filter-field">
+            <label for="f-sort-label">Sort by label</label>
+            <select id="f-sort-label" name="sortLabel" class="filter-input">
+              <option value="">Date created (default)</option>
+              <% labels.forEach(l => { %>
+                <option value="<%= l %>" <%= filters.sortLabel === l ? 'selected' : '' %>><%= l %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="f-sort-dir">Sort direction</label>
+            <select id="f-sort-dir" name="sortDir" class="filter-input">
+              <option value="desc" <%= filters.sortDir === 'desc' ? 'selected' : '' %>>Highest first</option>
+              <option value="asc" <%= filters.sortDir === 'asc' ? 'selected' : '' %>>Lowest first</option>
+            </select>
+          </div>
+
           <div class="filter-field filter-field-actions">
             <button type="submit" class="fi-btn fi-btn-create">Apply filters</button>
             <a href="/dashboard/rank" class="filter-clear">Clear</a>
@@ -85,7 +113,7 @@
               <span class="event-field-label">Values</span>
               <span class="event-field-value value-pair-list">
                 <% r.pairs.slice(0, 6).forEach((p) => { %>
-                  <span class="value-pair <%= p.matched ? 'matched' : '' %>"><%= p.label %>: <%= p.value %></span>
+                  <span class="value-pair <%= p.matched ? 'matched' : '' %> <%= p.sorted ? 'sorted' : '' %>"><%= p.label %>: <%= p.value %></span>
                 <% }) %>
                 <% if (r.pairs.length > 6) { %>
                   <span class="value-pair-more">+<%= r.pairs.length - 6 %> more</span>
@@ -107,6 +135,10 @@
             if (filters.source) params.set('source', filters.source);
             if (filters.userId) params.set('userId', filters.userId);
             if (filters.value) params.set('value', filters.value);
+            if (filters.from) params.set('from', filters.from);
+            if (filters.to) params.set('to', filters.to);
+            if (filters.sortLabel) params.set('sortLabel', filters.sortLabel);
+            if (filters.sortLabel) params.set('sortDir', filters.sortDir);
             params.set('page', p);
             return '?' + params.toString();
           };

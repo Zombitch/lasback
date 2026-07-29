@@ -226,7 +226,7 @@ export async function viewAnalytics(req, res, next) {
  */
 export async function viewRank(req, res, next) {
   try {
-    const { source, userId, value, page = 1 } = req.query;
+    const { source, userId, value, from, to, sortLabel, sortDir, page = 1 } = req.query;
 
     const filter = {};
     if (source) filter.source = source;
@@ -236,14 +236,41 @@ export async function viewRank(req, res, next) {
     const hasValueFilter = numValue !== null && !Number.isNaN(numValue);
     if (hasValueFilter) filter.values = numValue;
 
+    const dateFilter = buildDateFilter(from, to);
+    if (Object.keys(dateFilter).length) filter.createdAt = dateFilter;
+
     const limitNum = 50;
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const skip = (pageNum - 1) * limitNum;
 
-    const [ranks, total, sources] = await Promise.all([
-      Rank.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+    const dir = sortDir === 'asc' ? 1 : -1;
+    const hasSortLabel = Boolean(sortLabel);
+
+    const rankQuery = hasSortLabel
+      ? Rank.aggregate([
+          { $match: filter },
+          { $addFields: { __sortIdx: { $indexOfArray: ['$labels', sortLabel] } } },
+          {
+            $addFields: {
+              __hasSortValue: { $ne: ['$__sortIdx', -1] },
+              __sortValue: {
+                $cond: [{ $eq: ['$__sortIdx', -1] }, null, { $arrayElemAt: ['$values', '$__sortIdx'] }],
+              },
+            },
+          },
+          // Entries missing the selected label always sort last, regardless of direction.
+          { $sort: { __hasSortValue: -1, __sortValue: dir } },
+          { $skip: skip },
+          { $limit: limitNum },
+          { $project: { __sortIdx: 0, __sortValue: 0, __hasSortValue: 0 } },
+        ])
+      : Rank.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean();
+
+    const [ranks, total, sources, labels] = await Promise.all([
+      rankQuery,
       Rank.countDocuments(filter),
       Rank.distinct('source'),
+      Rank.distinct('labels'),
     ]);
 
     // Pair each value with its label (same index) and, when a value filter
@@ -253,6 +280,7 @@ export async function viewRank(req, res, next) {
         label,
         value: r.values[i],
         matched: hasValueFilter && r.values[i] === numValue,
+        sorted: hasSortLabel && label === sortLabel,
       }));
       const matchedPair = hasValueFilter ? pairs.find((p) => p.matched) : null;
       return {
@@ -268,10 +296,15 @@ export async function viewRank(req, res, next) {
       page: pageNum,
       pages: Math.max(1, Math.ceil(total / limitNum)),
       sources: sources.filter(Boolean).sort(),
+      labels: labels.filter(Boolean).sort(),
       filters: {
         source: source || '',
         userId: userId || '',
         value: value || '',
+        from: from || '',
+        to: to || '',
+        sortLabel: sortLabel || '',
+        sortDir: sortDir === 'asc' ? 'asc' : 'desc',
       },
     });
   } catch (err) {
