@@ -50,10 +50,16 @@ export async function postRank(req, res) {
       .json({ success: false, message: 'Every entry in `labels` must be a non-empty string' });
   }
 
+  const rankSource = source?.toString().trim().slice(0, 100);
+  const rankUserId = userId?.toString().trim().slice(0, 200);
+
+  // Only the latest submission per userId/source combo is kept.
+  await Rank.deleteMany({ source: rankSource, userId: rankUserId });
+
   const rank = await Rank.create({
-    source: source?.toString().trim().slice(0, 100),
+    source: rankSource,
     version: version?.toString().trim().slice(0, 50),
-    userId: userId?.toString().trim().slice(0, 200),
+    userId: rankUserId,
     values: numericValues,
     labels: stringLabels,
   });
