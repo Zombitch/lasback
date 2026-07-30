@@ -336,7 +336,9 @@ h1 {
 
 .nav-card-top {
   display: flex;
-  align-items: center;
+  /* flex-start, not center: once a long endpoint path wraps to 2+ lines,
+     center would float the method tag in the middle of the title block. */
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.6rem;
 }
@@ -346,6 +348,17 @@ h1 {
   font-weight: 700;
   color: #e2e8f0;
   margin: 0 0 0.2rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* API endpoint paths: no spaces to break on, so plain wrapping would
+   overflow the card — shown as code and allowed to break anywhere. */
+.nav-card-title-code {
+  font-family: monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  word-break: break-all;
 }
 
 /* Shared tag: every card carries one, whether it links to a page or
