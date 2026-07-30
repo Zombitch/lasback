@@ -1,6 +1,19 @@
 import { Rank } from './rank.model.js';
 
 const MAX_ENTRIES = 200;
+const MAX_ADDITIONAL_LABELS = 20;
+
+/**
+ * Parse the `additionalLabels` query param into a deduped, bounded list.
+ * Accepts a comma-separated string ("Clones,Floor") or repeated query keys
+ * (Express turns `?additionalLabels=a&additionalLabels=b` into an array).
+ */
+function parseAdditionalLabels(raw) {
+  if (!raw) return [];
+  const list = Array.isArray(raw) ? raw : String(raw).split(',');
+  const cleaned = list.map((l) => l?.toString().trim()).filter(Boolean);
+  return [...new Set(cleaned)].slice(0, MAX_ADDITIONAL_LABELS);
+}
 
 /**
  * POST /rank
@@ -78,19 +91,27 @@ export async function postRank(req, res) {
  * sorted by that label's value (highest first), along with the 5 entries
  * ranked immediately above and the 5 ranked immediately below.
  *
- * Query params: userId, label (both required)
+ * Query params: userId, label, source (all required — ranking is always
+ * scoped to a single source, otherwise values from unrelated games/sites
+ * would be compared against each other)
+ *   additionalLabels (optional) — comma-separated label names (e.g.
+ *   "Clones,Floor"); when set, each returned entry (the target user plus
+ *   the before/after neighbors) also carries an `additionalValues` object
+ *   with that user's value for each of those labels, if they have one.
  */
 export async function getRank(req, res, next) {
   try {
-    const { userId, label } = req.query;
+    const { userId, label, source } = req.query;
+    const additionalLabels = parseAdditionalLabels(req.query.additionalLabels);
 
-    if (!userId || !label) {
+    if (!userId || !label || !source) {
       return res
         .status(400)
-        .json({ success: false, message: '`userId` and `label` are required query params' });
+        .json({ success: false, message: '`userId`, `label`, and `source` are required query params' });
     }
 
     const entries = await Rank.aggregate([
+      { $match: { source } },
       { $addFields: { __idx: { $indexOfArray: ['$labels', label] } } },
       { $match: { __idx: { $ne: -1 } } },
       { $addFields: { __value: { $arrayElemAt: ['$values', '$__idx'] } } },
@@ -106,15 +127,45 @@ export async function getRank(req, res, next) {
         .json({ success: false, message: 'No submission found for this userId and label' });
     }
 
+    const before = entries.slice(Math.max(0, targetIndex - 5), targetIndex);
+    const after = entries.slice(targetIndex + 1, targetIndex + 6);
+
+    let additionalValuesByUser = null;
+    if (additionalLabels.length) {
+      const windowUserIds = [...new Set([userId, ...before.map((e) => e.userId), ...after.map((e) => e.userId)])];
+
+      const docs = await Rank.find(
+        { source, userId: { $in: windowUserIds } },
+        { userId: 1, labels: 1, values: 1, _id: 0 },
+      ).lean();
+
+      additionalValuesByUser = new Map();
+      for (const doc of docs) {
+        const vals = {};
+        for (const lbl of additionalLabels) {
+          const idx = doc.labels.indexOf(lbl);
+          if (idx !== -1) vals[lbl] = doc.values[idx];
+        }
+        additionalValuesByUser.set(doc.userId, vals);
+      }
+    }
+
+    const withAdditional = (entry) =>
+      additionalValuesByUser
+        ? { ...entry, additionalValues: additionalValuesByUser.get(entry.userId) || {} }
+        : entry;
+
     return res.json({
       success: true,
       userId,
       label,
+      source,
       rank: targetIndex + 1,
       total: entries.length,
       value: entries[targetIndex].value,
-      before: entries.slice(Math.max(0, targetIndex - 5), targetIndex),
-      after: entries.slice(targetIndex + 1, targetIndex + 6),
+      ...(additionalValuesByUser ? { additionalValues: additionalValuesByUser.get(userId) || {} } : {}),
+      before: before.map(withAdditional),
+      after: after.map(withAdditional),
     });
   } catch (err) {
     next(err);

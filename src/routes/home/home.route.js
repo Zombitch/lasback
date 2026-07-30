@@ -4,6 +4,7 @@ import { Event } from '../analytics/analytics.model.js';
 import { SaveVersion } from '../cloud-save/saveVersion.model.js';
 import { Player } from '../cloud-save/player.model.js';
 import { FeatureInterruptor } from '../feature-interruptor/feature-interruptor.model.js';
+import { apiRegistry } from './api-registry.js';
 
 const router = Router();
 
@@ -51,6 +52,10 @@ router.get('/', async (_req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+router.get('/api', (_req, res) => {
+  res.render('home-api', { apiSpecs: apiRegistry });
 });
 
 export default router;

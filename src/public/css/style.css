@@ -24,11 +24,15 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2rem;
-  height: 56px;
+  gap: 0.75rem;
+  padding: 0 clamp(1rem, 4vw, 2rem);
+  height: 52px;
   background: #060d1c;
   border-bottom: 1px solid #1e2d4a;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .topbar-brand {
@@ -67,12 +71,14 @@ a { color: inherit; text-decoration: none; }
   font-size: 0.7rem;
   color: #64748b;
   letter-spacing: 0.04em;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ── Content area ──────────────────────────────────────────── */
 .content {
   flex: 1;
-  padding: 2rem;
+  padding: clamp(1rem, 4vw, 2rem);
 }
 
 /* ── Footer ────────────────────────────────────────────────── */
@@ -106,7 +112,7 @@ h1 {
 
 /* ── Home: Hero ────────────────────────────────────────────── */
 .hero {
-  padding: 3rem 2rem 2rem;
+  padding: clamp(1.75rem, 6vw, 3rem) clamp(1rem, 4vw, 2rem) 1.5rem;
   text-align: center;
 }
 
@@ -114,24 +120,24 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   background: linear-gradient(135deg, #1a2a5e 0%, #0d1636 100%);
   border: 1px solid #2a3f7a;
   border-radius: 16px;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.1rem;
   box-shadow: 0 0 32px rgba(91, 140, 255, 0.15);
 }
 
 .hero-logo svg {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   color: #5B8CFF;
 }
 
 .hero h1 {
   margin: 0 0 0.4rem;
-  font-size: 1.9rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #f1f5f9;
   letter-spacing: -0.02em;
@@ -139,32 +145,28 @@ h1 {
 
 .hero-sub {
   color: #64748b;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   margin: 0;
 }
 
 /* ── Home: Stats strip ─────────────────────────────────────── */
 .stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 0 2rem 2rem;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  padding: 0 clamp(1rem, 4vw, 2rem) 1.75rem;
 }
 
 .stat-card {
   background: #0f1a30;
   border: 1px solid #1e2d4a;
   border-radius: 10px;
-  padding: 1rem 1.5rem;
-  min-width: 150px;
+  padding: 0.85rem 1rem;
   text-align: center;
-  flex: 1 1 150px;
-  max-width: 200px;
 }
 
 .stat-card-num {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #5B8CFF;
   line-height: 1.1;
@@ -172,7 +174,7 @@ h1 {
 }
 
 .stat-card-label {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -181,7 +183,7 @@ h1 {
 }
 
 .stat-card-delta {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #22c55e;
   margin-top: 0.25rem;
   display: block;
@@ -207,9 +209,54 @@ h1 {
   50% { opacity: 0.3; }
 }
 
+/* ── Home: Tab switcher (Pages / API) ──────────────────────── */
+/* Real navigation between two views (/ and /api), not a JS show/hide —
+   each tab is its own server-rendered page with its own nav-grid. */
+.tab-nav {
+  display: flex;
+  gap: 0.3rem;
+  margin: 0 clamp(1rem, 4vw, 2rem) 1.25rem;
+  padding: 0.3rem;
+  background: #0f1a30;
+  border: 1px solid #1e2d4a;
+  border-radius: 10px;
+}
+
+.tab-link {
+  flex: 1;
+  text-align: center;
+  padding: 0.6rem 1rem;
+  border-radius: 7px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #94a3b8;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tab-link.active {
+  background: rgba(91, 140, 255, 0.15);
+  color: #5B8CFF;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tab-link:not(.active):hover {
+    color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.tab-link:focus-visible {
+  outline: 2px solid #5B8CFF;
+  outline-offset: 2px;
+}
+
+@media (min-width: 640px) {
+  .tab-nav { display: inline-flex; }
+}
+
 /* ── Home: Section label ───────────────────────────────────── */
 .section-label {
-  padding: 0 2rem 0.75rem;
+  padding: 0 clamp(1rem, 4vw, 2rem) 0.75rem;
   font-size: 0.7rem;
   color: #475569;
   text-transform: uppercase;
@@ -218,11 +265,13 @@ h1 {
 }
 
 /* ── Home: Nav cards ───────────────────────────────────────── */
+/* Single column by default (mobile-first); grid widens via the
+   min-width media query below once there's room for 2+ columns. */
 .nav-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1rem;
-  padding: 0 2rem 2.5rem;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  padding: 0 clamp(1rem, 4vw, 2rem) 2.5rem;
 }
 
 .nav-card {
@@ -232,15 +281,32 @@ h1 {
   background: #0f1a30;
   border: 1px solid #1e2d4a;
   border-radius: 10px;
-  padding: 1.25rem;
+  padding: 1.1rem;
+  min-height: 64px;
   transition: border-color 0.15s, background 0.15s, transform 0.12s;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.nav-card:hover {
+/* Hover lift only for devices that actually have a mouse — on touch
+   screens :hover sticks after tap and looks like a stuck focus state. */
+@media (hover: hover) and (pointer: fine) {
+  .nav-card:hover {
+    border-color: #5B8CFF;
+    background: #111f3a;
+    transform: translateY(-2px);
+  }
+}
+
+.nav-card:active {
   border-color: #5B8CFF;
   background: #111f3a;
-  transform: translateY(-2px);
+  transform: scale(0.99);
+}
+
+.nav-card:focus-visible {
+  outline: 2px solid #5B8CFF;
+  outline-offset: 2px;
 }
 
 .nav-card-icon {
@@ -263,11 +329,49 @@ h1 {
 .nav-card-icon.green { background: rgba(34, 197, 94, 0.12);   color: #22c55e; }
 .nav-card-icon.amber { background: rgba(245, 158, 11, 0.12);  color: #f59e0b; }
 
+.nav-card-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.nav-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
 .nav-card-title {
   font-size: 0.95rem;
   font-weight: 700;
   color: #e2e8f0;
   margin: 0 0 0.2rem;
+}
+
+/* Shared tag: every card carries one, whether it links to a page or
+   opens an API spec — same anatomy, data-driven label/color only. */
+.nav-card-tag {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.18rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.nav-card-tag-page {
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #94a3b8;
+}
+
+/* API cards reuse .api-method-GET/.api-method-POST for color, but as a
+   .nav-card-tag they need the same pill shape as the Page tag. */
+.nav-card-tag.api-method-GET,
+.nav-card-tag.api-method-POST {
+  border-radius: 9999px;
+  padding: 0.18rem 0.55rem;
 }
 
 .nav-card-desc {
@@ -282,6 +386,20 @@ h1 {
   color: #334155;
   margin-top: 0.4rem;
   font-family: monospace;
+  word-break: break-all;
+}
+
+/* Wider viewports: stats and nav cards get more columns as space allows. */
+@media (min-width: 480px) {
+  .stats { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 640px) {
+  .nav-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+}
+
+@media (min-width: 860px) {
+  .stats { grid-template-columns: repeat(6, 1fr); }
 }
 
 /* ── Tables ────────────────────────────────────────────────── */
@@ -878,31 +996,37 @@ td {
   word-break: break-word;
 }
 
-/* ── API reference cards + popin ──────────────────────────── */
-.nav-card-api {
-  position: relative;
-}
-
-.nav-card-api-badge {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  color: #f59e0b;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  padding: 0.15rem 0.45rem;
-  border-radius: 9999px;
-}
-
+/* ── API reference popin ──────────────────────────────────── */
 .api-modal-content {
   max-width: 92vw;
   width: 100%;
   max-height: 85vh;
   overflow-y: auto;
   padding: 1rem 1.1rem;
+}
+
+/* Mobile: slide up as a bottom sheet instead of a floating centered box —
+   easier to reach one-handed and feels native on a phone. Scoped to the
+   API modal only so the feature-interruptor / JSON viewer modals elsewhere
+   keep their existing centered behavior. */
+@media (max-width: 639px) {
+  .api-modal {
+    align-items: flex-end;
+  }
+
+  .api-modal-content {
+    max-width: 100%;
+    max-height: 88vh;
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+    padding: 1.25rem 1.1rem calc(1.25rem + env(safe-area-inset-bottom));
+    animation: sheet-up 0.18s ease-out;
+  }
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(16px); opacity: 0.6; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .api-endpoint {
@@ -983,6 +1107,101 @@ td {
   padding: 0.6rem 0.8rem;
   border-radius: 8px;
   margin-bottom: 1rem;
+}
+
+/* ── API tab: live tester (try-it form + response) ─────────── */
+.api-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+}
+
+.api-field-group label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.api-field-required {
+  color: #f87171;
+}
+
+.api-field-note {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.api-input {
+  width: 100%;
+  background: #060d1c;
+  border: 1px solid #1e2d4a;
+  color: #e2e8f0;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.api-input:focus {
+  border-color: #5B8CFF;
+}
+
+.api-textarea {
+  width: 100%;
+  min-height: 160px;
+  background: #060d1c;
+  border: 1px solid #1e2d4a;
+  color: #e2e8f0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.15s;
+}
+
+.api-textarea:focus {
+  border-color: #5B8CFF;
+}
+
+.api-send-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0.5rem 0 1rem;
+}
+
+.fi-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.api-response {
+  border-top: 1px solid #1e2d4a;
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+}
+
+.api-resp-status {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+}
+
+.api-resp-status.ok   { background: rgba(34, 197, 94, 0.15);  color: #22c55e; }
+.api-resp-status.warn { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.api-resp-status.err  { background: rgba(239, 68, 68, 0.15);  color: #f87171; }
+
+.api-response .json-tree {
+  max-height: 320px;
 }
 
 @media (min-width: 640px) {

@@ -1,0 +1,574 @@
+<%- include('../partials/header') %>
+<%- include('../partials/home-hero') %>
+
+<%- include('../partials/home-tabs', { active: 'api' }) %>
+
+  <!-- Analytics -->
+  <div class="section-label">Analytics</div>
+  <div class="nav-grid">
+
+    <div class="nav-card" data-api-id="analytics-event" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon teal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">POST /analytics/event</p>
+          <span class="nav-card-tag api-method-POST">POST</span>
+        </div>
+        <p class="nav-card-desc">Envoyer un événement depuis un jeu ou un site. Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code></p>
+        <p class="nav-card-url">/analytics/event</p>
+      </div>
+    </div>
+
+    <div class="nav-card" data-api-id="analytics-events" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon teal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 6h16M4 12h16M4 18h10"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">GET /analytics/events</p>
+          <span class="nav-card-tag api-method-GET">GET</span>
+        </div>
+        <p class="nav-card-desc">Liste paginée des événements, filtrable par source / action / userId / dates. Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code></p>
+        <p class="nav-card-url">/analytics/events</p>
+      </div>
+    </div>
+
+    <div class="nav-card" data-api-id="analytics-stats" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon teal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">GET /analytics/stats</p>
+          <span class="nav-card-tag api-method-GET">GET</span>
+        </div>
+        <p class="nav-card-desc">Stats agrégées filtrables par source, action, dates. Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code></p>
+        <p class="nav-card-url">/analytics/stats</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Rank -->
+  <div class="section-label">Rank</div>
+  <div class="nav-grid">
+
+    <div class="nav-card" data-api-id="rank-post" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">POST /rank</p>
+          <span class="nav-card-tag api-method-POST">POST</span>
+        </div>
+        <p class="nav-card-desc">Envoyer une soumission de valeurs classées. Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code></p>
+        <p class="nav-card-url">/rank</p>
+      </div>
+    </div>
+
+    <div class="nav-card" data-api-id="rank-get" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">GET /rank</p>
+          <span class="nav-card-tag api-method-GET">GET</span>
+        </div>
+        <p class="nav-card-desc">Position d'un userId pour un label et une source donnés, plus 5 entrées au-dessus / en dessous (+ labels additionnels optionnels). Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code></p>
+        <p class="nav-card-url">/rank</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Cloud Saves -->
+  <div class="section-label">Cloud Saves</div>
+  <div class="nav-grid">
+
+    <div class="nav-card" data-api-id="auth-register" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">POST /v1/auth/register</p>
+          <span class="nav-card-tag api-method-POST">POST</span>
+        </div>
+        <p class="nav-card-desc">Créer un compte joueur. Retourne un JWT. Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code></p>
+        <p class="nav-card-url">/v1/auth/register</p>
+      </div>
+    </div>
+
+    <div class="nav-card" data-api-id="auth-login" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">POST /v1/auth/login</p>
+          <span class="nav-card-tag api-method-POST">POST</span>
+        </div>
+        <p class="nav-card-desc">Se connecter et recevoir un JWT. Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code></p>
+        <p class="nav-card-url">/v1/auth/login</p>
+      </div>
+    </div>
+
+    <div class="nav-card" data-api-id="saves-create" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">POST /v1/games/:gameId/saves/:slotKey</p>
+          <span class="nav-card-tag api-method-POST">POST</span>
+        </div>
+        <p class="nav-card-desc">Créer une nouvelle version de sauvegarde pour le joueur authentifié. Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code> + JWT</p>
+        <p class="nav-card-url">/v1/games/:gameId/saves/:slotKey</p>
+      </div>
+    </div>
+
+    <div class="nav-card" data-api-id="saves-latest" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">GET /v1/games/:gameId/saves/:slotKey/latest</p>
+          <span class="nav-card-tag api-method-GET">GET</span>
+        </div>
+        <p class="nav-card-desc">Récupérer la dernière sauvegarde d'un slot (payload complet). Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code> + JWT</p>
+        <p class="nav-card-url">/v1/games/:gameId/saves/:slotKey/latest</p>
+      </div>
+    </div>
+
+    <div class="nav-card" data-api-id="saves-list" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">GET /v1/games/:gameId/saves/:slotKey</p>
+          <span class="nav-card-tag api-method-GET">GET</span>
+        </div>
+        <p class="nav-card-desc">Lister les métadonnées de versions d'un slot (sans payload). Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code> + JWT</p>
+        <p class="nav-card-url">/v1/games/:gameId/saves/:slotKey</p>
+      </div>
+    </div>
+
+    <div class="nav-card" data-api-id="saves-version" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">GET /v1/games/:gameId/saves/:slotKey/:version</p>
+          <span class="nav-card-tag api-method-GET">GET</span>
+        </div>
+        <p class="nav-card-desc">Récupérer une version spécifique (payload complet). Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code> + JWT</p>
+        <p class="nav-card-url">/v1/games/:gameId/saves/:slotKey/:version</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Feature Interruptor -->
+  <div class="section-label">Feature Interruptor</div>
+  <div class="nav-grid">
+
+    <div class="nav-card" data-api-id="feature-get" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18.36 6.64A9 9 0 1 1 5.64 18.36"/>
+          <circle cx="12" cy="12" r="1"/>
+          <line x1="12" y1="8" x2="12" y2="2"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">GET /feature-interruptor</p>
+          <span class="nav-card-tag api-method-GET">GET</span>
+        </div>
+        <p class="nav-card-desc">Statut activé/désactivé d'une fonctionnalité pour une app donnée. Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code></p>
+        <p class="nav-card-url">/feature-interruptor</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Visits -->
+  <div class="section-label">Visits</div>
+  <div class="nav-grid">
+
+    <div class="nav-card" data-api-id="visit-post" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">POST /visit</p>
+          <span class="nav-card-tag api-method-POST">POST</span>
+        </div>
+        <p class="nav-card-desc">Enregistrer une visite (url, langue, origine). Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code></p>
+        <p class="nav-card-url">/visit</p>
+      </div>
+    </div>
+
+    <div class="nav-card" data-api-id="visit-get" role="button" tabindex="0" aria-haspopup="dialog">
+      <div class="nav-card-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+      </div>
+      <div class="nav-card-body">
+        <div class="nav-card-top">
+          <p class="nav-card-title">GET /visit</p>
+          <span class="nav-card-tag api-method-GET">GET</span>
+        </div>
+        <p class="nav-card-desc">Lister les 500 dernières visites. Requiert <code style="font-size:0.7rem; color:#f59e0b;">x-api-key</code></p>
+        <p class="nav-card-url">/visit</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- API reference + live tester popin -->
+  <div id="api-info-modal" class="fi-modal api-modal" style="display:none">
+    <div class="fi-modal-content api-modal-content">
+      <div class="json-modal-header">
+        <h3 id="api-info-title">API reference</h3>
+        <button type="button" class="json-modal-close" id="api-info-close" aria-label="Close">&times;</button>
+      </div>
+      <div id="api-info-body" class="api-info-body"></div>
+    </div>
+  </div>
+
+  <script>
+    // Server-authoritative registry (src/routes/home/api-registry.js) — method,
+    // path template and requiresJwt here must match what POST /dashboard/api-tester
+    // will actually call, since the browser only ever sends an apiId, never a
+    // raw path. Keeping one source of truth is what makes "try it" safe.
+    const apiSpecs = <%- JSON.stringify(apiSpecs) %>;
+    const JWT_STORAGE_KEY = 'lasTestJwt';
+
+    let currentApiId = null;
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[c]));
+    }
+
+    // ── Response tree (same renderer used by the analytics event-metadata viewer) ──
+    function renderJsonValue(value, keyLabel, depth) {
+      depth = depth || 0;
+      const isContainer = value !== null && typeof value === 'object';
+      const keyHtml = keyLabel !== undefined
+        ? `<span class="json-key">${escapeHtml(keyLabel)}</span><span class="json-punct">: </span>`
+        : '';
+
+      if (!isContainer) {
+        const row = document.createElement('div');
+        row.className = 'json-leaf-row';
+        let valueHtml;
+        if (typeof value === 'string') valueHtml = `<span class="json-string">"${escapeHtml(value)}"</span>`;
+        else if (typeof value === 'number') valueHtml = `<span class="json-number">${value}</span>`;
+        else if (typeof value === 'boolean') valueHtml = `<span class="json-boolean">${value}</span>`;
+        else valueHtml = '<span class="json-null">null</span>';
+        row.innerHTML = keyHtml + valueHtml;
+        return row;
+      }
+
+      const isArray = Array.isArray(value);
+      const entries = isArray ? value.map((v, i) => [i, v]) : Object.entries(value);
+
+      const details = document.createElement('details');
+      details.className = 'json-node';
+      details.open = depth < 2;
+
+      const summary = document.createElement('summary');
+      const countLabel = `${entries.length} ${isArray ? 'item' : 'key'}${entries.length === 1 ? '' : 's'}`;
+      summary.innerHTML = keyHtml +
+        `<span class="json-punct">${isArray ? '[' : '{'}</span>` +
+        `<span class="json-type-count">${countLabel}</span>` +
+        `<span class="json-punct">${isArray ? ']' : '}'}</span>`;
+      details.appendChild(summary);
+
+      const nested = document.createElement('div');
+      nested.className = 'json-node-nested';
+      entries.forEach(([k, v]) => {
+        nested.appendChild(renderJsonValue(v, k, depth + 1));
+      });
+      details.appendChild(nested);
+
+      return details;
+    }
+
+    // ── "Try it" form ──────────────────────────────────────────────────────
+    function fieldGroup(labelText, required, inputHtml, note) {
+      return '<div class="api-field-group">' +
+        `<label>${escapeHtml(labelText)}${required ? ' <span class="api-field-required">*</span>' : ''}</label>` +
+        inputHtml +
+        (note ? `<span class="api-field-note">${escapeHtml(note)}</span>` : '') +
+        '</div>';
+    }
+
+    function buildPanel(spec) {
+      const parts = [];
+
+      parts.push(
+        `<div class="api-endpoint"><span class="api-method api-method-${escapeHtml(spec.method)}">${escapeHtml(spec.method)}</span><code>${escapeHtml(spec.path)}</code></div>`
+      );
+
+      if (spec.description) {
+        parts.push(`<p class="api-description">${escapeHtml(spec.description)}</p>`);
+      }
+
+      if (spec.requiresJwt) {
+        parts.push(fieldGroup(
+          'Authorization (JWT)',
+          false,
+          '<input type="text" class="api-input" data-field="jwt" placeholder="jwt obtenu via /v1/auth/login ou /v1/auth/register" />',
+          'x-api-key est ajoutée automatiquement — seul le token joueur se colle ici.'
+        ));
+      }
+
+      if (spec.params && spec.params.length) {
+        parts.push(
+          '<div class="api-info-section"><h4>Path params</h4>' +
+          spec.params.map((p) => fieldGroup(
+            p.name,
+            true,
+            `<input type="text" class="api-input" data-field="param:${escapeHtml(p.name)}" placeholder="${escapeHtml(p.note || '')}" />`,
+            null
+          )).join('') +
+          '</div>'
+        );
+      }
+
+      if (spec.query && spec.query.length) {
+        parts.push(
+          '<div class="api-info-section"><h4>Query params</h4>' +
+          spec.query.map((q) => fieldGroup(
+            q.name,
+            /requis/i.test(q.note || ''),
+            `<input type="text" class="api-input" data-field="query:${escapeHtml(q.name)}" placeholder="${escapeHtml(q.note || '')}" />`,
+            null
+          )).join('') +
+          '</div>'
+        );
+      }
+
+      if (spec.body !== undefined) {
+        parts.push(
+          '<div class="api-info-section"><h4>Body (JSON)</h4>' +
+          '<textarea class="api-textarea" data-field="body" rows="9" spellcheck="false"></textarea></div>'
+        );
+        if (spec.bodyNote) {
+          parts.push(`<div class="api-note">${escapeHtml(spec.bodyNote)}</div>`);
+        }
+      }
+
+      parts.push(
+        '<div class="api-send-row">' +
+        '<button type="button" class="fi-btn fi-btn-create" id="api-send-btn">Envoyer la requête</button>' +
+        '<span class="api-field-note">x-api-key ajoutée automatiquement par le serveur</span>' +
+        '</div>'
+      );
+
+      parts.push('<div id="api-response" class="api-response" style="display:none"></div>');
+
+      return parts.join('');
+    }
+
+    function openApiModal(apiId) {
+      const spec = apiSpecs[apiId];
+      if (!spec) return;
+      currentApiId = apiId;
+
+      document.getElementById('api-info-title').textContent = `${spec.method} ${spec.path}`;
+
+      const bodyEl = document.getElementById('api-info-body');
+      bodyEl.innerHTML = buildPanel(spec);
+
+      // Set via the DOM property (not the HTML string) so example JSON never
+      // has to survive an escape/unescape round-trip.
+      const bodyField = bodyEl.querySelector('[data-field="body"]');
+      if (bodyField && spec.body !== undefined) {
+        bodyField.value = JSON.stringify(spec.body, null, 2);
+      }
+
+      const jwtField = bodyEl.querySelector('[data-field="jwt"]');
+      if (jwtField) {
+        jwtField.value = sessionStorage.getItem(JWT_STORAGE_KEY) || '';
+      }
+
+      document.getElementById('api-info-modal').style.display = 'flex';
+    }
+
+    function closeApiModal() {
+      document.getElementById('api-info-modal').style.display = 'none';
+      currentApiId = null;
+    }
+
+    // ── Firing the request through the server-side proxy ───────────────────
+    async function sendApiRequest() {
+      const spec = apiSpecs[currentApiId];
+      if (!spec) return;
+
+      const bodyEl = document.getElementById('api-info-body');
+      const params = {};
+      const query = {};
+      let jwt;
+      let bodyValue;
+      let bodyParseError = null;
+
+      bodyEl.querySelectorAll('[data-field]').forEach((el) => {
+        const field = el.dataset.field;
+        if (field === 'jwt') {
+          jwt = el.value.trim() || undefined;
+        } else if (field === 'body') {
+          const raw = el.value.trim();
+          if (raw) {
+            try {
+              bodyValue = JSON.parse(raw);
+            } catch (e) {
+              bodyParseError = `Body JSON invalide : ${e.message}`;
+            }
+          }
+        } else if (field.startsWith('param:')) {
+          params[field.slice(6)] = el.value.trim();
+        } else if (field.startsWith('query:')) {
+          const v = el.value.trim();
+          if (v) query[field.slice(6)] = v;
+        }
+      });
+
+      const responseEl = document.getElementById('api-response');
+      responseEl.style.display = 'block';
+
+      if (bodyParseError) {
+        responseEl.innerHTML = `<div class="api-resp-status err">Erreur</div><p class="api-description">${escapeHtml(bodyParseError)}</p>`;
+        return;
+      }
+
+      const sendBtn = document.getElementById('api-send-btn');
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Envoi…';
+      responseEl.innerHTML = '<p class="api-description">Envoi en cours…</p>';
+
+      try {
+        const res = await fetch('/dashboard/api-tester', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiId: currentApiId, params, query, body: bodyValue, jwt }),
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          responseEl.innerHTML = `<div class="api-resp-status err">Erreur</div><p class="api-description">${escapeHtml(data.message || 'Requête échouée')}</p>`;
+          return;
+        }
+
+        const status = data.response.status;
+        const statusText = data.response.statusText;
+        const respBody = data.response.body;
+        const truncated = data.response.truncated;
+        const statusClass = status < 300 ? 'ok' : status < 500 ? 'warn' : 'err';
+
+        let capturedNote = '';
+        if ((currentApiId === 'auth-login' || currentApiId === 'auth-register') && respBody && respBody.token) {
+          sessionStorage.setItem(JWT_STORAGE_KEY, respBody.token);
+          capturedNote = '<div class="api-note">JWT capturé — pré-rempli automatiquement pour les endpoints Cloud Saves.</div>';
+        }
+
+        responseEl.innerHTML =
+          `<div class="api-resp-status ${statusClass}">${status} ${escapeHtml(statusText || '')}</div>` +
+          capturedNote +
+          '<div class="json-tree" id="api-response-tree"></div>' +
+          (truncated ? '<div class="api-note">Réponse tronquée (trop volumineuse).</div>' : '');
+
+        document.getElementById('api-response-tree').appendChild(renderJsonValue(respBody, undefined, 0));
+      } catch (err) {
+        responseEl.innerHTML = `<div class="api-resp-status err">Erreur</div><p class="api-description">${escapeHtml(err.message)}</p>`;
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Envoyer la requête';
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'api-send-btn') {
+        sendApiRequest();
+        return;
+      }
+      const card = e.target.closest('[data-api-id]');
+      if (card) {
+        openApiModal(card.dataset.apiId);
+        return;
+      }
+      if (e.target.id === 'api-info-modal') closeApiModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeApiModal();
+        return;
+      }
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-api-id]')) {
+        e.preventDefault();
+        openApiModal(e.target.dataset.apiId);
+      }
+    });
+
+    document.getElementById('api-info-close').addEventListener('click', closeApiModal);
+  </script>
+
+<%- include('../partials/footer') %>

@@ -7,9 +7,11 @@ import {
   viewRank,
   viewRankDetail,
 } from './dashboard.controller.js';
+import { postApiTester } from '../home/api-tester.controller.js';
 
 const router = Router();
 
+router.post('/api-tester', postApiTester);
 router.get('/visits-details', viewVisitsDetails);
 router.get('/visits', viewVisits);
 router.get('/analytics/source/:source', viewSourceEvents);

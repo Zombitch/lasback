@@ -226,6 +226,7 @@ app.use('/admin', totpAuth, adminFeatureInterruptorRouter);
 
 // All view routes are protected by TOTP
 app.get('/', totpAuth, homeRouter);
+app.get('/api', totpAuth, homeRouter);
 app.use('/dashboard/saves', totpAuth, dashboardSavesRouter);
 app.use('/dashboard/feature-interruptors', totpAuth, dashboardFeatureInterruptorRouter);
 app.use('/dashboard', totpAuth, dashboardRouter);
