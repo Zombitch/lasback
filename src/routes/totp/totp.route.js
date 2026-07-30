@@ -174,7 +174,11 @@ router.get('/verify', async (req, res, next) => {
 });
 
 // ─── POST /totp/verify ──────────────────────────────────────────────────────
-// Validate the code against all stored TOTP secrets.
+// Validate the submitted username against the ADMIN_USERNAMES allowlist AND
+// the code against all stored TOTP secrets. Both checks always run — even
+// when the username is already known to be invalid — so a bad username
+// can't be distinguished from a bad code by response timing, and the error
+// message never says which one failed.
 router.post('/verify', totpLimiter, async (req, res, next) => {
   try {
     const count = await Totp.countDocuments();
@@ -182,13 +186,18 @@ router.post('/verify', totpLimiter, async (req, res, next) => {
       return res.redirect('/totp/setup');
     }
 
+    const rawUsername = typeof req.body.username === 'string' ? req.body.username.trim() : '';
+    const usernameValid =
+      rawUsername.length > 0 &&
+      config.adminUsernames.some((u) => u.toLowerCase() === rawUsername.toLowerCase());
+
     const rawCode = req.body.code;
     const code = sanitizeCode(rawCode);
     const secrets = await Totp.find();
 
     logger.info({ storedSecrets: secrets.length }, '[TOTP-VERIFY] Verification attempt');
 
-    let valid = false;
+    let codeValid = false;
     for (const entry of secrets) {
       const totp = new OTPAuth.TOTP({
         issuer: ISSUER,
@@ -202,21 +211,23 @@ router.post('/verify', totpLimiter, async (req, res, next) => {
       const delta = totp.validate({ token: code, window: TOTP_WINDOW });
 
       if (delta !== null) {
-        valid = true;
+        codeValid = true;
         break;
       }
     }
 
-    if (!valid) {
-      logger.warn('[TOTP-VERIFY] All secrets exhausted — code rejected');
+    if (!usernameValid || !codeValid) {
+      logger.warn({ usernameValid, codeValid }, '[TOTP-VERIFY] Rejected');
       return res.render('totp-verify', {
-        error: 'Code invalide. Veuillez réessayer.',
+        error: "Nom d'utilisateur ou code invalide. Veuillez réessayer.",
+        username: rawUsername,
       });
     }
 
-    logger.info('[TOTP-VERIFY] Code accepted');
+    logger.info({ username: rawUsername }, '[TOTP-VERIFY] Accepted');
 
     req.session.totpVerified = true;
+    req.session.totpUsername = rawUsername;
     res.redirect('/');
   } catch (err) {
     next(err);

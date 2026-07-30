@@ -17,7 +17,7 @@
 
     <h1>Authentification</h1>
     <p class="subtitle">
-      Entrez le code à 6 chiffres généré par votre application d'authentification.
+      Entrez votre nom d'utilisateur et le code à 6 chiffres généré par votre application d'authentification.
     </p>
 
     <% if (typeof error !== 'undefined' && error) { %>
@@ -25,17 +25,28 @@
     <% } %>
 
     <form method="POST" action="/totp/verify" autocomplete="off">
+      <label for="username">Nom d'utilisateur</label>
+      <input
+        type="text"
+        id="username"
+        name="username"
+        placeholder="admin"
+        value="<%= typeof username !== 'undefined' ? username : '' %>"
+        maxlength="100"
+        required
+        autofocus
+      />
       <label for="code">Code TOTP</label>
       <input
         type="text"
         id="code"
         name="code"
+        class="otp-input"
         placeholder="000000"
         maxlength="6"
         pattern="[0-9]{6}"
         inputmode="numeric"
         required
-        autofocus
       />
       <button type="submit">Vérifier</button>
     </form>

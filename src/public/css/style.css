@@ -1348,10 +1348,7 @@ td {
   border: 1px solid #1e2d4a;
   border-radius: 8px;
   color: #e2e8f0;
-  font-size: 1.2rem;
-  font-family: monospace;
-  text-align: center;
-  letter-spacing: 0.3em;
+  font-size: 0.95rem;
   outline: none;
   transition: border-color 0.15s;
 }
@@ -1362,6 +1359,18 @@ td {
 
 .card input[type="text"]::placeholder {
   color: #334155;
+}
+
+/* 6-digit TOTP code fields get the wide, centered, monospace treatment;
+   plain fields (e.g. username) stay left-aligned and normally spaced. */
+.card input.otp-input {
+  font-size: 1.2rem;
+  font-family: monospace;
+  text-align: center;
+  letter-spacing: 0.3em;
+}
+
+.card input.otp-input::placeholder {
   letter-spacing: 0.2em;
 }
 

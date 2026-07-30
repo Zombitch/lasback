@@ -49,6 +49,16 @@ export const config = {
     .map(k => k.trim())
     .filter(Boolean),
 
+  /**
+   * Allowlist of usernames that may log in via TOTP (src/routes/totp).
+   * The login form's username is checked against this list — it's not tied
+   * to a specific TOTP secret, all admins still share the same secret pool.
+   */
+  adminUsernames: (getEnvVar('ADMIN_USERNAMES', { required: false }) || '')
+    .split(',')
+    .map(u => u.trim())
+    .filter(Boolean),
+
   sessionSecret: getSecret('SESSION_SECRET'),
   jwtSecret: getSecret('JWT_SECRET'),
 
