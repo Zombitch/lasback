@@ -120,13 +120,13 @@ export const apiRegistry = {
     method: 'GET',
     path: '/rank',
     requiresJwt: false,
-    description: "Retourne le classement d'un userId pour un label donné, avec les 5 entrées au-dessus et en dessous.",
+    description: "Retourne le classement d'un userId pour un label donné (égalités départagées par additionalLabels, dans l'ordre), avec les 5 entrées au-dessus et en dessous.",
     docHeaders: [{ name: 'x-api-key', value: '<votre clé API>' }],
     query: [
       { name: 'userId', note: 'requis' },
       { name: 'label', note: 'requis' },
       { name: 'source', note: 'requis' },
-      { name: 'additionalLabels', note: 'optionnel — labels séparés par virgule, ex: Clones,Floor' },
+      { name: 'additionalLabels', note: "optionnel — labels séparés par virgule, ex: Clones,Floor. Départagent les égalités sur `label` dans l'ordre donné, et sont renvoyés en plus dans additionalValues" },
     ],
     response: {
       success: true,
