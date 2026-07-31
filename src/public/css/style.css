@@ -1277,11 +1277,11 @@ td {
      fixed 8-column template — mismatched column counts made rows drift
      across grid lines, spilling data into the header row. */
   .rank-list {
-    grid-template-columns: 150px 110px 90px 150px 1fr 110px;
+    grid-template-columns: 150px 110px 90px 150px 1fr 110px 100px;
   }
 
   .rank-list.rank-list-matched {
-    grid-template-columns: 150px 110px 90px 150px 160px 1fr 110px;
+    grid-template-columns: 150px 110px 90px 150px 160px 1fr 110px 100px;
   }
 }
 

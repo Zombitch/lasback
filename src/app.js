@@ -26,6 +26,7 @@ import totpRouter from './routes/totp/totp.route.js';
 import visitRouter from './routes/visit/visit.route.js';
 import analyticsRouter from './routes/analytics/analytics.route.js';
 import rankRouter from './routes/rank/rank.route.js';
+import adminRankRouter from './routes/rank/admin-rank.route.js';
 
 import cloudSaveAuthRouter from './routes/cloud-save/auth.route.js';
 import cloudSaveRouter from './routes/cloud-save/saves.route.js';
@@ -223,6 +224,7 @@ app.use('/feature-interruptor', apiKeyAuth, checkOriginAllowed, featureInterrupt
 // Admin JSON API (TOTP protected)
 app.use('/admin', totpAuth, adminSavesRouter);
 app.use('/admin', totpAuth, adminFeatureInterruptorRouter);
+app.use('/admin', totpAuth, adminRankRouter);
 
 // All view routes are protected by TOTP
 app.get('/', totpAuth, homeRouter);
