@@ -172,13 +172,11 @@
       for (var i = 0; i < DROP_COUNT; i++) drops.push(makeDrop());
 
       // ---- Audio (Web Audio API) ----
-      var DROP_VARIANT_COUNT = <%= dropVariantCount %>;
       var AudioCtx = window.AudioContext || window.webkitAudioContext;
       var audioCtx = null;
-      var dropBuffers = [];
       var thunderBuffer = null;
       var masterGain = null;
-      var bedGainNode = null;
+      var rainGainNode = null;
       var muted = false;
 
       function loadSound(url) {
@@ -187,24 +185,19 @@
           .then(function (buf) { return audioCtx.decodeAudioData(buf); });
       }
 
-      // Real rain has a stereo spread and a mix of near/far drops — a mono
-      // buffer replayed dead-center at a fixed volume reads as artificial no
-      // matter how good the underlying sample is, so every playback gets its
-      // own random pan and a gain/rate pair that leans together (closer,
-      // bigger drops play a little louder AND a little lower-pitched).
-      function playBuffer(buffer, gainValue, rate, pan) {
-        if (!audioCtx || !buffer || muted) return;
+      function playThunderSound() {
+        if (!audioCtx || !thunderBuffer || muted) return;
         var source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.playbackRate.value = rate || 1;
+        source.buffer = thunderBuffer;
+        source.playbackRate.value = 0.95 + Math.random() * 0.1;
 
         var gainNode = audioCtx.createGain();
-        gainNode.gain.value = gainValue;
+        gainNode.gain.value = 0.6 + Math.random() * 0.3;
 
         var node = gainNode;
         if (audioCtx.createStereoPanner) {
           var panner = audioCtx.createStereoPanner();
-          panner.pan.value = pan || 0;
+          panner.pan.value = (Math.random() - 0.5) * 0.6;
           gainNode.connect(panner);
           node = panner;
         }
@@ -214,46 +207,20 @@
         source.start();
       }
 
-      function playDropSound(drop) {
-        if (dropBuffers.length === 0) return;
-        var buffer = dropBuffers[Math.floor(Math.random() * dropBuffers.length)];
-
-        // Bigger/faster-falling drops (heavier, closer-sounding impacts)
-        // get a bit more gain and a bit lower pitch than small/fast ones.
-        var weight = drop ? (drop.len - 10) / 18 : Math.random();
-        var rate = 1.15 - weight * 0.3 + (Math.random() - 0.5) * 0.25;
-        var gainValue = 0.03 + weight * 0.05 + Math.random() * 0.05;
-        var pan = drop ? (drop.x / width) * 2 - 1 : (Math.random() * 2 - 1);
-        pan += (Math.random() - 0.5) * 0.3;
-
-        playBuffer(buffer, gainValue, rate, Math.max(-1, Math.min(1, pan)));
-      }
-
-      function playThunderSound() {
-        var gainValue = 0.5 + Math.random() * 0.4;
-        playBuffer(thunderBuffer, gainValue, 0.9 + Math.random() * 0.2, (Math.random() - 0.5) * 0.6);
-      }
-
-      function startRainBed(buffer) {
+      function startRainLoop(buffer) {
         var source = audioCtx.createBufferSource();
         source.buffer = buffer;
         source.loop = true;
 
-        bedGainNode = audioCtx.createGain();
-        bedGainNode.gain.value = 0;
-        source.connect(bedGainNode).connect(masterGain);
+        rainGainNode = audioCtx.createGain();
+        rainGainNode.gain.value = 0;
+        source.connect(rainGainNode).connect(masterGain);
         source.start();
 
-        // Fade the continuous bed in rather than snapping it on.
-        var target = muted ? 0 : 0.55;
-        bedGainNode.gain.linearRampToValueAtTime(target, audioCtx.currentTime + 2.5);
+        // Fade the continuous rain loop in rather than snapping it on.
+        var target = muted ? 0 : 0.7;
+        rainGainNode.gain.linearRampToValueAtTime(target, audioCtx.currentTime + 2.5);
       }
-
-      // Only a fraction of drops reaching the bottom actually trigger a
-      // plink on top of the continuous rain bed — otherwise hundreds of
-      // overlapping transients would drown out the texture that actually
-      // reads as "rain".
-      var DROP_SOUND_CHANCE = 0.09;
 
       function triggerLightning() {
         var flashDuration = 120 + Math.random() * 100;
@@ -298,7 +265,6 @@
           ctx.stroke();
 
           if (d.y > height) {
-            if (Math.random() < DROP_SOUND_CHANCE) playDropSound(d);
             d.y = -d.len - Math.random() * 40;
             d.x = Math.random() * width;
           }
@@ -316,19 +282,11 @@
         masterGain.gain.value = 1;
         masterGain.connect(audioCtx.destination);
 
-        var variantLoads = [];
-        for (var v = 0; v < DROP_VARIANT_COUNT; v++) {
-          variantLoads.push(loadSound('/tools/weather/sounds/drop-' + v + '.wav'));
-        }
-        Promise.all(variantLoads).then(function (buffers) {
-          dropBuffers = buffers;
-        });
-
         loadSound('/tools/weather/sounds/thunder.wav').then(function (buffer) {
           thunderBuffer = buffer;
         });
 
-        loadSound('/tools/weather/sounds/rain-bed.wav').then(startRainBed);
+        loadSound('/tools/weather/sounds/rain.wav').then(startRainLoop);
 
         scheduleNextLightning();
         requestAnimationFrame(tick);

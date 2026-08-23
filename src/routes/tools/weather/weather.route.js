@@ -1,17 +1,16 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { renderWeather, serveDropVariant, serveRainBedSound, serveThunderSound } from './weather.controller.js';
+import { renderWeather, serveRainSound, serveThunderSound } from './weather.controller.js';
 
 const router = Router();
 
 /**
  * This route is intentionally public (no apiKeyAuth/checkOriginAllowed/totpAuth).
  * It's the one endpoint anyone can hit with no credentials, so it gets its own
- * tighter limiter instead of sharing the app-wide one — a spammer here
- * shouldn't be able to eat into the quota legitimate API callers share on the
- * same IP. Max is higher than a single page's request count would suggest
- * (page + drop variant pool + rain bed + thunder, all cached/reused after
- * the first fetch) to give normal reloads plenty of headroom.
+ * limiter instead of sharing the app-wide one — a spammer here shouldn't be
+ * able to eat into the quota legitimate API callers share on the same IP.
+ * Serving is just two cached static files now (no per-request synthesis), so
+ * this mainly guards against pointless bandwidth abuse rather than CPU cost.
  */
 const weatherLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
@@ -23,8 +22,7 @@ const weatherLimiter = rateLimit({
 router.use(weatherLimiter);
 
 router.get('/', renderWeather);
-router.get('/sounds/drop-:index.wav', serveDropVariant);
-router.get('/sounds/rain-bed.wav', serveRainBedSound);
+router.get('/sounds/rain.wav', serveRainSound);
 router.get('/sounds/thunder.wav', serveThunderSound);
 
 export default router;
