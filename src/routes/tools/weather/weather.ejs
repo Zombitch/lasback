@@ -171,6 +171,47 @@
       white-space: nowrap;
       display: none;
     }
+
+    #eyes-button {
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 230, 194, 0.4);
+      background: rgba(5, 7, 13, 0.4);
+      color: #ffe6c2;
+      cursor: pointer;
+      display: none;
+    }
+
+    /* Opaque, sits above everything (including #controls) so nothing is
+       reachable except tapping to exit. */
+    #closed-eyes-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      background: #05070d;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    #closed-eyes-overlay.active {
+      display: flex;
+    }
+    #closed-eyes-hint {
+      color: #ffe6c2;
+      opacity: 0.5;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      text-align: center;
+      padding: 0 2rem;
+      transition: opacity 3s ease 1.5s;
+      pointer-events: none;
+    }
+    #closed-eyes-hint.faded {
+      opacity: 0;
+    }
   </style>
 </head>
 <body>
@@ -192,11 +233,16 @@
         <option value="45">45 min</option>
         <option value="60">60 min</option>
       </select>
+      <button id="eyes-button" type="button">🌙 Fermer les yeux</button>
     </div>
 
     <div id="start-overlay">
       <h1>Un abri douillet, une tempête au dehors.</h1>
       <button id="start-button" type="button">Entrer dans le cocon</button>
+    </div>
+
+    <div id="closed-eyes-overlay">
+      <div id="closed-eyes-hint">Touchez l'écran pour rouvrir les yeux</div>
     </div>
   </div>
 
@@ -211,6 +257,9 @@
       var timerRemaining = document.getElementById('timer-remaining');
       var intensityGauge = document.getElementById('intensity-gauge');
       var intensityGaugeFill = document.getElementById('intensity-gauge-fill');
+      var eyesButton = document.getElementById('eyes-button');
+      var closedEyesOverlay = document.getElementById('closed-eyes-overlay');
+      var closedEyesHint = document.getElementById('closed-eyes-hint');
 
       var width = 0;
       var height = 0;
@@ -498,6 +547,7 @@
 
       // ---- Animation loop ----
       var lastTime = null;
+      var animationFrameId = null;
       function tick(timestamp) {
         if (lastTime === null) lastTime = timestamp;
         var dt = Math.min((timestamp - lastTime) / 1000, 0.05);
@@ -615,12 +665,13 @@
         }
         ctx.filter = 'none';
 
-        requestAnimationFrame(tick);
+        animationFrameId = requestAnimationFrame(tick);
       }
 
       function startExperience() {
         startOverlay.style.display = 'none';
         timerSelect.style.display = 'inline-block';
+        eyesButton.style.display = 'inline-block';
 
         audioCtx = new AudioCtx();
         masterGain = audioCtx.createGain();
@@ -634,7 +685,7 @@
         loadSound('/tools/weather/sounds/rain.wav?v=<%= rainVersion %>').then(startRainLoop);
 
         scheduleNextLightning();
-        requestAnimationFrame(tick);
+        animationFrameId = requestAnimationFrame(tick);
       }
 
       startButton.addEventListener('click', function () {
@@ -642,6 +693,44 @@
           audioCtx.resume();
         }
         if (!audioCtx) startExperience();
+      });
+
+      // ---- Closed-eyes mode ----
+      // Hides all visuals behind an opaque overlay and stops the animation
+      // loop entirely (rain/ripples/condensation/bolt drawing) — audio
+      // keeps playing untouched, since the whole point is "eyes closed,
+      // still listening". Lightning's own setTimeout chain doesn't depend
+      // on the animation loop, so thunder still fires on schedule.
+      var closedEyesActive = false;
+
+      function enterClosedEyes() {
+        closedEyesActive = true;
+        closedEyesOverlay.classList.add('active');
+        closedEyesHint.classList.remove('faded');
+        // Force a reflow so the class removal above is committed before
+        // re-adding it, otherwise the fade-out transition wouldn't replay
+        // on a second entry.
+        void closedEyesHint.offsetWidth;
+        closedEyesHint.classList.add('faded');
+        cancelAnimationFrame(animationFrameId);
+      }
+
+      function exitClosedEyes() {
+        closedEyesActive = false;
+        closedEyesOverlay.classList.remove('active');
+        lastTime = null;
+        animationFrameId = requestAnimationFrame(tick);
+      }
+
+      eyesButton.addEventListener('click', enterClosedEyes);
+
+      // The overlay's own tap handles the exit; it also marks the click as
+      // "handled" so the same tap doesn't bubble up and get treated as a
+      // storm click (which would otherwise call down a stray lightning
+      // strike the instant eyes re-open).
+      closedEyesOverlay.addEventListener('click', function () {
+        exitClosedEyes();
+        suppressNextClick = true;
       });
 
       // ---- Sleep timer ----
@@ -693,7 +782,7 @@
       var DRAG_PIXELS_FOR_FULL_SWING = 260;
 
       document.addEventListener('pointerdown', function (e) {
-        if (!audioCtx) return;
+        if (!audioCtx || closedEyesActive) return;
         if (e.target.closest && e.target.closest('button, select')) return;
         clearTimeout(gaugeHideTimeoutId);
         dragState = { startY: e.clientY, startIntensity: intensity, moved: 0 };
