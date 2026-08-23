@@ -177,6 +177,7 @@
       var thunderBuffer = null;
       var masterGain = null;
       var rainGainNode = null;
+      var rainSourceNode = null;
       var muted = false;
 
       function loadSound(url) {
@@ -217,9 +218,32 @@
         source.connect(rainGainNode).connect(masterGain);
         source.start();
 
+        rainSourceNode = source;
+
         // Fade the continuous rain loop in rather than snapping it on.
         var target = muted ? 0 : 0.7;
         rainGainNode.gain.linearRampToValueAtTime(target, audioCtx.currentTime + 2.5);
+      }
+
+      // Speeds up (rate > 1) or slows down (rate < 1) the rain loop.
+      // AudioBufferSourceNode.playbackRate is a live AudioParam, so this
+      // takes effect immediately on the already-playing loop with no need
+      // to restart it — pass rampSeconds for a smooth glide instead of an
+      // instant jump.
+      //
+      // Note: this resamples rather than time-stretches, so pitch shifts
+      // with it too (slower = deeper, faster = higher) — that's inherent
+      // to this technique, not a bug.
+      //
+      // Not wired up to anything yet — call this from wherever a future
+      // "intensity" control lives once one exists.
+      function setRainPlaybackRate(rate, rampSeconds) {
+        if (!rainSourceNode) return;
+        if (rampSeconds) {
+          rainSourceNode.playbackRate.linearRampToValueAtTime(rate, audioCtx.currentTime + rampSeconds);
+        } else {
+          rainSourceNode.playbackRate.value = rate;
+        }
       }
 
       // ---- Lightning bolt geometry ----
