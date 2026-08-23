@@ -490,8 +490,8 @@
       }
 
       function scheduleNextLightning() {
-        var minDelay = lerp3(25000, 13000, 4000, intensity);
-        var maxDelay = lerp3(110000, 73000, 14000, intensity);
+        var minDelay = 10000;
+        var maxDelay = 120000;
         var next = minDelay + Math.random() * (maxDelay - minDelay);
         lightningTimeoutId = setTimeout(triggerLightning, next);
       }
