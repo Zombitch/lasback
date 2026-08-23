@@ -147,18 +147,6 @@
       gap: 0.5rem;
     }
 
-    #mute-button {
-      font-family: inherit;
-      font-size: 0.9rem;
-      padding: 0.4rem 0.9rem;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 230, 194, 0.4);
-      background: rgba(5, 7, 13, 0.4);
-      color: #ffe6c2;
-      cursor: pointer;
-      display: none;
-    }
-
     #timer-select {
       font-family: inherit;
       font-size: 0.85rem;
@@ -204,7 +192,6 @@
         <option value="45">45 min</option>
         <option value="60">60 min</option>
       </select>
-      <button id="mute-button" type="button" aria-pressed="false">🔊 Couper le son</button>
     </div>
 
     <div id="start-overlay">
@@ -220,7 +207,6 @@
       var flashEl = document.getElementById('lightning-flash');
       var startOverlay = document.getElementById('start-overlay');
       var startButton = document.getElementById('start-button');
-      var muteButton = document.getElementById('mute-button');
       var timerSelect = document.getElementById('timer-select');
       var timerRemaining = document.getElementById('timer-remaining');
       var intensityGauge = document.getElementById('intensity-gauge');
@@ -634,7 +620,6 @@
 
       function startExperience() {
         startOverlay.style.display = 'none';
-        muteButton.style.display = 'inline-block';
         timerSelect.style.display = 'inline-block';
 
         audioCtx = new AudioCtx();
@@ -657,13 +642,6 @@
           audioCtx.resume();
         }
         if (!audioCtx) startExperience();
-      });
-
-      muteButton.addEventListener('click', function () {
-        muted = !muted;
-        if (masterGain) masterGain.gain.value = muted ? 0 : 1;
-        muteButton.textContent = muted ? '🔇 Activer le son' : '🔊 Couper le son';
-        muteButton.setAttribute('aria-pressed', String(muted));
       });
 
       // ---- Sleep timer ----
