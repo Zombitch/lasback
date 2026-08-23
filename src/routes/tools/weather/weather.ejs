@@ -403,8 +403,9 @@
       // ---- Storm intensity — slide up for wilder, slide down for calmer ----
       // 0.5 is the resting default and is deliberately chosen so every
       // value below matches what was already tuned before this control
-      // existed (rain gain 0.7, rain rate 1x, lightning gap 13-73s, normal
-      // fall speed/wind) — nothing changes until someone actually drags.
+      // existed (rain gain 0.7, rain rate 1x, normal fall speed/wind) —
+      // nothing changes until someone actually drags. Deliberately does NOT
+      // touch lightning frequency, which is tuned independently.
       var intensity = 0.5;
 
       function lerp3(calmVal, restVal, wildVal, t) {
@@ -415,9 +416,13 @@
       function applyIntensity(rampSeconds) {
         var ramp = rampSeconds || 0.15;
         if (rainGainNode && audioCtx) {
-          rainGainNode.gain.linearRampToValueAtTime(lerp3(0.4, 0.7, 0.95, intensity), audioCtx.currentTime + ramp);
+          rainGainNode.gain.linearRampToValueAtTime(lerp3(0.25, 0.7, 1, intensity), audioCtx.currentTime + ramp);
         }
-        setRainPlaybackRate(lerp3(0.85, 1, 1.25, intensity), ramp);
+        // Pitch shift is capped more conservatively than the other knobs —
+        // playbackRate resamples rather than time-stretches, so pushing it
+        // much past this starts sounding chipmunked/cartoonish rather than
+        // "more intense".
+        setRainPlaybackRate(lerp3(0.75, 1, 1.4, intensity), ramp);
         intensityGaugeFill.style.height = (intensity * 100) + '%';
       }
 
@@ -572,8 +577,8 @@
           ctx.stroke();
         }
 
-        var speedFactor = lerp3(0.65, 1, 1.5, intensity);
-        var windFactor = lerp3(0.4, 1, 2.3, intensity);
+        var speedFactor = lerp3(0.4, 1, 2.5, intensity);
+        var windFactor = lerp3(0.15, 1, 4.5, intensity);
 
         for (var i = 0; i < drops.length; i++) {
           var d = drops[i];
