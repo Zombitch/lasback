@@ -282,11 +282,11 @@
         masterGain.gain.value = 1;
         masterGain.connect(audioCtx.destination);
 
-        loadSound('/tools/weather/sounds/thunder.wav').then(function (buffer) {
+        loadSound('/tools/weather/sounds/thunder.wav?v=<%= thunderVersion %>').then(function (buffer) {
           thunderBuffer = buffer;
         });
 
-        loadSound('/tools/weather/sounds/rain.wav').then(startRainLoop);
+        loadSound('/tools/weather/sounds/rain.wav?v=<%= rainVersion %>').then(startRainLoop);
 
         scheduleNextLightning();
         requestAnimationFrame(tick);

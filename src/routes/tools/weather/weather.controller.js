@@ -11,7 +11,11 @@ const THUNDER_FILE = 'boomy-thunder-shock.wav';
 
 const WAV_CACHE_HEADERS = {
   'Content-Type': 'audio/wav',
-  'Cache-Control': 'public, max-age=3600',
+  // Safe to cache aggressively/indefinitely because the URL is versioned
+  // below (?v=<mtime>) — swapping the underlying file changes the URL the
+  // view requests, so browsers never serve a stale asset from a previous
+  // deploy under the old URL.
+  'Cache-Control': 'public, max-age=31536000, immutable',
 };
 
 // Read once per server lifetime and reused for every request — no reason
@@ -25,6 +29,20 @@ function loadWavAsset(filename) {
   const buffer = fs.readFileSync(filePath);
   assetCache.set(filename, buffer);
   return buffer;
+}
+
+// Used only to version the URLs the view fetches, so a redeployed asset
+// gets a new URL instead of being masked by a previous long-lived cache.
+// Falls back to the server start time when the file can't be stat'd, which
+// just means the URL changes on every restart instead of every file swap —
+// harmless, and keeps rendering the page even if the asset is missing.
+const serverStartVersion = String(Date.now());
+function getAssetVersion(filename) {
+  try {
+    return String(fs.statSync(path.join(ASSETS_DIR, filename)).mtimeMs);
+  } catch {
+    return serverStartVersion;
+  }
 }
 
 function serveWavAsset(filename, res) {
@@ -44,7 +62,10 @@ function serveWavAsset(filename, res) {
 }
 
 export function renderWeather(req, res) {
-  res.render('weather');
+  res.render('weather', {
+    rainVersion: getAssetVersion(RAIN_LOOP_FILE),
+    thunderVersion: getAssetVersion(THUNDER_FILE),
+  });
 }
 
 export function serveRainSound(req, res) {
