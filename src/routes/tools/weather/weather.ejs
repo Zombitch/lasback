@@ -174,6 +174,15 @@
       background: #05070d;
       color: #ffe6c2;
     }
+
+    #timer-remaining {
+      font-family: inherit;
+      font-size: 0.8rem;
+      color: #ffe6c2;
+      opacity: 0.75;
+      white-space: nowrap;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -186,6 +195,7 @@
     <div id="caption">Restons dans notre cocon, pendant que le temps se déchaîne dehors.</div>
 
     <div id="controls">
+      <span id="timer-remaining" aria-live="polite"></span>
       <select id="timer-select" aria-label="Minuterie">
         <option value="0">Pas de minuterie</option>
         <option value="1">1 min</option>
@@ -212,6 +222,7 @@
       var startButton = document.getElementById('start-button');
       var muteButton = document.getElementById('mute-button');
       var timerSelect = document.getElementById('timer-select');
+      var timerRemaining = document.getElementById('timer-remaining');
       var intensityGauge = document.getElementById('intensity-gauge');
       var intensityGaugeFill = document.getElementById('intensity-gauge-fill');
 
@@ -662,13 +673,38 @@
       // first screen when the timer ends, same as a fresh reload — the
       // device can then dim/lock on its own once nothing is playing.
       var sleepTimerId = null;
+      var sleepCountdownId = null;
+      var sleepTimerEndsAt = null;
+
+      function formatRemaining(ms) {
+        var totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+        var minutes = Math.floor(totalSeconds / 60);
+        var seconds = totalSeconds % 60;
+        return minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+      }
+
+      function updateTimerRemaining() {
+        var remaining = sleepTimerEndsAt - Date.now();
+        timerRemaining.textContent = formatRemaining(remaining);
+        if (remaining <= 0) clearInterval(sleepCountdownId);
+      }
+
       timerSelect.addEventListener('change', function () {
         clearTimeout(sleepTimerId);
+        clearInterval(sleepCountdownId);
+
         var minutes = parseInt(timerSelect.value, 10);
         if (minutes > 0) {
+          sleepTimerEndsAt = Date.now() + minutes * 60000;
           sleepTimerId = setTimeout(function () {
             location.reload();
           }, minutes * 60000);
+
+          timerRemaining.style.display = 'inline';
+          updateTimerRemaining();
+          sleepCountdownId = setInterval(updateTimerRemaining, 1000);
+        } else {
+          timerRemaining.style.display = 'none';
         }
       });
 
