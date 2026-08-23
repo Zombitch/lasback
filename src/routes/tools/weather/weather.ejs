@@ -222,25 +222,113 @@
         rainGainNode.gain.linearRampToValueAtTime(target, audioCtx.currentTime + 2.5);
       }
 
+      // ---- Lightning bolt geometry ----
+      // A real bolt is a jagged fractal path, not a flat flash: build one
+      // with classic midpoint displacement (repeatedly bend each segment's
+      // midpoint sideways by a shrinking random amount), plus a couple of
+      // shorter forking branches off the main stem.
+      function midpointDisplace(p0, p1, displace, depth, out) {
+        if (depth <= 0) {
+          out.push(p1);
+          return;
+        }
+        var mx = (p0[0] + p1[0]) / 2;
+        var my = (p0[1] + p1[1]) / 2;
+        var dx = p1[0] - p0[0];
+        var dy = p1[1] - p0[1];
+        var len = Math.sqrt(dx * dx + dy * dy) || 1;
+        var nx = -dy / len;
+        var ny = dx / len;
+        var offset = (Math.random() * 2 - 1) * displace;
+        var mid = [mx + nx * offset, my + ny * offset];
+        midpointDisplace(p0, mid, displace * 0.55, depth - 1, out);
+        midpointDisplace(mid, p1, displace * 0.55, depth - 1, out);
+      }
+
+      function generateBoltPath(x0, y0, x1, y1, displace, depth) {
+        var points = [[x0, y0]];
+        midpointDisplace([x0, y0], [x1, y1], displace, depth, points);
+        return points;
+      }
+
+      function generateBranches(mainPoints) {
+        var branches = [];
+        var count = 1 + Math.floor(Math.random() * 3);
+        for (var i = 0; i < count; i++) {
+          var idx = Math.floor(mainPoints.length * (0.2 + Math.random() * 0.5));
+          var start = mainPoints[idx];
+          var length = 60 + Math.random() * 140;
+          var angle = Math.PI / 2 + (Math.random() - 0.5) * 1.2; // mostly downward, spread sideways
+          var end = [start[0] + Math.cos(angle) * length, start[1] + Math.sin(angle) * length];
+          branches.push(generateBoltPath(start[0], start[1], end[0], end[1], length * 0.25, 3));
+        }
+        return branches;
+      }
+
+      function drawBoltPath(points, alpha, lineWidth, glow) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = '#eaf2ff';
+        ctx.lineWidth = lineWidth;
+        ctx.shadowColor = '#bcd7ff';
+        ctx.shadowBlur = glow;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(points[0][0], points[0][1]);
+        for (var i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawBolt(bolt, alpha) {
+        drawBoltPath(bolt.main, alpha, 3, 25);
+        for (var i = 0; i < bolt.branches.length; i++) {
+          drawBoltPath(bolt.branches[i], alpha * 0.7, 1.6, 15);
+        }
+      }
+
+      // Real lightning flickers — a bright instant strike, a brief dark gap,
+      // a dimmer second flash, then the sky afterglow fades out. Returns
+      // null once the sequence is over.
+      function getLightningState(elapsedMs) {
+        if (elapsedMs < 40) return { boltAlpha: 1, skyAlpha: 0.6 };
+        if (elapsedMs < 90) return { boltAlpha: 0, skyAlpha: 0.1 };
+        if (elapsedMs < 130) return { boltAlpha: 0.75, skyAlpha: 0.35 };
+        if (elapsedMs < 300) return { boltAlpha: 0, skyAlpha: 0.16 * (1 - (elapsedMs - 130) / 170) };
+        return null;
+      }
+
+      var activeBolt = null;
+      var lightningTimeoutId = null;
+      var lastLightningTime = -Infinity;
+
       function triggerLightning() {
-        var flashDuration = 120 + Math.random() * 100;
-        flashEl.style.transition = 'opacity 70ms ease-out';
-        flashEl.style.opacity = 0.85;
-        setTimeout(function () {
-          flashEl.style.transition = 'opacity ' + flashDuration + 'ms ease-in';
-          flashEl.style.opacity = 0;
-        }, 70);
+        lastLightningTime = performance.now();
+
+        var x0 = width * 0.15 + Math.random() * width * 0.7;
+        var y0 = 0;
+        var x1 = x0 + (Math.random() - 0.5) * width * 0.3;
+        var y1 = height * (0.35 + Math.random() * 0.4);
+        var mainPoints = generateBoltPath(x0, y0, x1, y1, Math.max(20, (y1 - y0) * 0.12), 6);
+
+        activeBolt = {
+          main: mainPoints,
+          branches: generateBranches(mainPoints),
+          startTime: lastLightningTime,
+        };
 
         // Thunder lags behind the flash, like distant lightning.
         var thunderDelay = 250 + Math.random() * 1300;
         setTimeout(playThunderSound, thunderDelay);
 
+        clearTimeout(lightningTimeoutId);
         scheduleNextLightning();
       }
 
       function scheduleNextLightning() {
         var next = 13000 + Math.random() * 60000;
-        setTimeout(triggerLightning, next);
+        lightningTimeoutId = setTimeout(triggerLightning, next);
       }
 
       // ---- Animation loop ----
@@ -267,6 +355,17 @@
           if (d.y > height) {
             d.y = -d.len - Math.random() * 40;
             d.x = Math.random() * width;
+          }
+        }
+
+        if (activeBolt) {
+          var state = getLightningState(timestamp - activeBolt.startTime);
+          if (!state) {
+            activeBolt = null;
+            flashEl.style.opacity = 0;
+          } else {
+            flashEl.style.opacity = state.skyAlpha;
+            if (state.boltAlpha > 0) drawBolt(activeBolt, state.boltAlpha);
           }
         }
 
@@ -304,6 +403,16 @@
         if (masterGain) masterGain.gain.value = muted ? 0 : 1;
         muteButton.textContent = muted ? '🔇 Activer le son' : '🔊 Couper le son';
         muteButton.setAttribute('aria-pressed', String(muted));
+      });
+
+      // Clicking the storm itself calls down a strike. Ignored on buttons
+      // (start/mute) and rate-limited so spam-clicking can't machine-gun
+      // flashes and overlapping thunder.
+      document.addEventListener('click', function (e) {
+        if (!audioCtx) return;
+        if (e.target.closest && e.target.closest('button')) return;
+        if (performance.now() - lastLightningTime < 700) return;
+        triggerLightning();
       });
     })();
   </script>
