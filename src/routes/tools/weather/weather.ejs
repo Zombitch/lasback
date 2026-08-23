@@ -17,6 +17,7 @@
       overflow: hidden;
       background: #05070d;
       font-family: Georgia, 'Times New Roman', serif;
+      touch-action: none;
     }
 
     #scene {
@@ -55,6 +56,35 @@
       background:
         radial-gradient(ellipse at 50% 100%, rgba(255, 176, 92, 0.35) 0%, rgba(255, 176, 92, 0) 55%),
         radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 40%, rgba(5,7,13,0.85) 100%);
+    }
+
+    /* Storm-intensity feedback — only shown while actively dragging */
+    #intensity-gauge {
+      position: absolute;
+      top: 50%;
+      right: 1.4rem;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 140px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 230, 194, 0.25);
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+      z-index: 4;
+    }
+    #intensity-gauge.visible {
+      opacity: 0.9;
+    }
+    #intensity-gauge-fill {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 50%;
+      background: linear-gradient(180deg, #ffb05c, #eaf2ff);
     }
 
     #caption {
@@ -107,11 +137,17 @@
       background: rgba(255, 176, 92, 0.28);
     }
 
-    #mute-button {
+    #controls {
       position: absolute;
       top: 1.2rem;
       right: 1.2rem;
       z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    #mute-button {
       font-family: inherit;
       font-size: 0.9rem;
       padding: 0.4rem 0.9rem;
@@ -122,6 +158,22 @@
       cursor: pointer;
       display: none;
     }
+
+    #timer-select {
+      font-family: inherit;
+      font-size: 0.85rem;
+      padding: 0.4rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 230, 194, 0.4);
+      background: rgba(5, 7, 13, 0.4);
+      color: #ffe6c2;
+      cursor: pointer;
+      display: none;
+    }
+    #timer-select option {
+      background: #05070d;
+      color: #ffe6c2;
+    }
   </style>
 </head>
 <body>
@@ -130,8 +182,19 @@
     <canvas id="rain-canvas"></canvas>
     <div id="lightning-flash"></div>
     <div id="cocoon-vignette"></div>
+    <div id="intensity-gauge"><div id="intensity-gauge-fill"></div></div>
     <div id="caption">Restons dans notre cocon, pendant que le temps se déchaîne dehors.</div>
-    <button id="mute-button" type="button" aria-pressed="false">🔊 Couper le son</button>
+
+    <div id="controls">
+      <select id="timer-select" aria-label="Minuterie">
+        <option value="0">Pas de minuterie</option>
+        <option value="15">15 min</option>
+        <option value="30">30 min</option>
+        <option value="45">45 min</option>
+        <option value="60">60 min</option>
+      </select>
+      <button id="mute-button" type="button" aria-pressed="false">🔊 Couper le son</button>
+    </div>
 
     <div id="start-overlay">
       <h1>Un abri douillet, une tempête au dehors.</h1>
@@ -147,6 +210,9 @@
       var startOverlay = document.getElementById('start-overlay');
       var startButton = document.getElementById('start-button');
       var muteButton = document.getElementById('mute-button');
+      var timerSelect = document.getElementById('timer-select');
+      var intensityGauge = document.getElementById('intensity-gauge');
+      var intensityGaugeFill = document.getElementById('intensity-gauge-fill');
 
       var width = 0;
       var height = 0;
@@ -161,15 +227,48 @@
       var DROP_COUNT = 220;
       var drops = [];
       function makeDrop() {
+        var len = 10 + Math.random() * 18;
         return {
           x: Math.random() * width,
           y: Math.random() * height,
-          len: 10 + Math.random() * 18,
+          len: len,
           speed: 420 + Math.random() * 380,
           sway: (Math.random() - 0.5) * 20,
+          // 0-1, derived from size — used to vary both how the drop is
+          // drawn (thicker/brighter) and how loud/low its splash sounds.
+          weight: (len - 10) / 18,
         };
       }
       for (var i = 0; i < DROP_COUNT; i++) drops.push(makeDrop());
+
+      // ---- Window condensation — small beads on the glass in front of the
+      // rain, mostly still, occasionally sliding a short distance. ----
+      var CONDENSATION_COUNT = 18;
+      var condensationDrops = [];
+      function makeCondensationDrop() {
+        return {
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: 4 + Math.random() * 7,
+          sliding: false,
+          slideProgress: 0,
+          slideDistance: 0,
+        };
+      }
+      for (var ci = 0; ci < CONDENSATION_COUNT; ci++) condensationDrops.push(makeCondensationDrop());
+
+      // ---- Puddle ripples where drops land ----
+      var ripples = [];
+      function spawnRipple(x, weight) {
+        ripples.push({
+          x: x,
+          y: height - Math.random() * 14,
+          radius: 1,
+          maxRadius: 14 + weight * 22,
+          alpha: 0.5 + weight * 0.2,
+        });
+        if (ripples.length > 150) ripples.shift();
+      }
 
       // ---- Audio (Web Audio API) ----
       var AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -186,25 +285,35 @@
           .then(function (buf) { return audioCtx.decodeAudioData(buf); });
       }
 
-      function playThunderSound() {
+      // distanceFactor: 0 = strike right overhead, 1 = far away. Farther
+      // strikes are quieter and duller (air absorbs high frequencies over
+      // distance) — the same cue game audio uses to sell distance.
+      function playThunderSound(distanceFactor, pan) {
         if (!audioCtx || !thunderBuffer || muted) return;
+
         var source = audioCtx.createBufferSource();
         source.buffer = thunderBuffer;
         source.playbackRate.value = 0.95 + Math.random() * 0.1;
 
-        var gainNode = audioCtx.createGain();
-        gainNode.gain.value = 0.6 + Math.random() * 0.3;
+        var filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 9000 - distanceFactor * 7000;
 
-        var node = gainNode;
+        var gainNode = audioCtx.createGain();
+        gainNode.gain.value = (0.85 - distanceFactor * 0.5) * (0.85 + Math.random() * 0.3);
+
+        source.connect(filter);
+        var node = filter;
+
         if (audioCtx.createStereoPanner) {
           var panner = audioCtx.createStereoPanner();
-          panner.pan.value = (Math.random() - 0.5) * 0.6;
-          gainNode.connect(panner);
+          panner.pan.value = pan * 0.7;
+          node.connect(panner);
           node = panner;
         }
 
-        source.connect(gainNode);
-        node.connect(masterGain);
+        node.connect(gainNode);
+        gainNode.connect(masterGain);
         source.start();
       }
 
@@ -220,9 +329,10 @@
 
         rainSourceNode = source;
 
-        // Fade the continuous rain loop in rather than snapping it on.
-        var target = muted ? 0 : 0.7;
-        rainGainNode.gain.linearRampToValueAtTime(target, audioCtx.currentTime + 2.5);
+        // Fade the continuous rain loop in from silence over the first few
+        // seconds rather than snapping it on, then let applyIntensity own
+        // the level from here on.
+        applyIntensity(2.5);
       }
 
       // Speeds up (rate > 1) or slows down (rate < 1) the rain loop.
@@ -234,9 +344,6 @@
       // Note: this resamples rather than time-stretches, so pitch shifts
       // with it too (slower = deeper, faster = higher) — that's inherent
       // to this technique, not a bug.
-      //
-      // Not wired up to anything yet — call this from wherever a future
-      // "intensity" control lives once one exists.
       function setRainPlaybackRate(rate, rampSeconds) {
         if (!rainSourceNode) return;
         if (rampSeconds) {
@@ -244,6 +351,32 @@
         } else {
           rainSourceNode.playbackRate.value = rate;
         }
+      }
+
+      // ---- Storm intensity — slide up for wilder, slide down for calmer ----
+      // 0.5 is the resting default and is deliberately chosen so every
+      // value below matches what was already tuned before this control
+      // existed (rain gain 0.7, rain rate 1x, lightning gap 13-73s, normal
+      // fall speed/wind) — nothing changes until someone actually drags.
+      var intensity = 0.5;
+
+      function lerp3(calmVal, restVal, wildVal, t) {
+        if (t <= 0.5) return calmVal + (restVal - calmVal) * (t / 0.5);
+        return restVal + (wildVal - restVal) * ((t - 0.5) / 0.5);
+      }
+
+      function applyIntensity(rampSeconds) {
+        var ramp = rampSeconds || 0.15;
+        if (rainGainNode && audioCtx) {
+          rainGainNode.gain.linearRampToValueAtTime(lerp3(0.4, 0.7, 0.95, intensity), audioCtx.currentTime + ramp);
+        }
+        setRainPlaybackRate(lerp3(0.85, 1, 1.25, intensity), ramp);
+        intensityGaugeFill.style.height = (intensity * 100) + '%';
+      }
+
+      function setIntensity(value) {
+        intensity = Math.max(0, Math.min(1, value));
+        applyIntensity();
       }
 
       // ---- Lightning bolt geometry ----
@@ -342,16 +475,26 @@
           startTime: lastLightningTime,
         };
 
-        // Thunder lags behind the flash, like distant lightning.
+        // The delay before thunder arrives IS how far away the strike was —
+        // reuse it to shape how the thunder sounds too (closer = louder and
+        // sharper, farther = quieter and duller), not just when it plays.
+        // Captured here (not read from activeBolt later) because activeBolt
+        // has already faded and cleared by the time this timeout fires.
         var thunderDelay = 250 + Math.random() * 1300;
-        setTimeout(playThunderSound, thunderDelay);
+        var distanceFactor = (thunderDelay - 250) / 1300;
+        var pan = Math.max(-1, Math.min(1, (x0 / width) * 2 - 1));
+        setTimeout(function () {
+          playThunderSound(distanceFactor, pan);
+        }, thunderDelay);
 
         clearTimeout(lightningTimeoutId);
         scheduleNextLightning();
       }
 
       function scheduleNextLightning() {
-        var next = 13000 + Math.random() * 60000;
+        var minDelay = lerp3(25000, 13000, 4000, intensity);
+        var maxDelay = lerp3(110000, 73000, 14000, intensity);
+        var next = minDelay + Math.random() * (maxDelay - minDelay);
         lightningTimeoutId = setTimeout(triggerLightning, next);
       }
 
@@ -363,20 +506,58 @@
         lastTime = timestamp;
 
         ctx.clearRect(0, 0, width, height);
-        ctx.strokeStyle = 'rgba(200, 220, 255, 0.5)';
-        ctx.lineWidth = 1.4;
+        ctx.lineCap = 'round';
+
+        // Puddle ripples, drawn first so falling rain reads as in front of them.
+        for (var r = ripples.length - 1; r >= 0; r--) {
+          var rp = ripples[r];
+          rp.radius += 60 * dt;
+          rp.alpha -= dt * 1.1;
+          if (rp.alpha <= 0 || rp.radius >= rp.maxRadius) {
+            ripples.splice(r, 1);
+            continue;
+          }
+          ctx.beginPath();
+          ctx.strokeStyle = 'rgba(210, 230, 255, ' + Math.max(0, rp.alpha) + ')';
+          ctx.lineWidth = 1;
+          ctx.ellipse(rp.x, rp.y, rp.radius, rp.radius * 0.35, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        var speedFactor = lerp3(0.65, 1, 1.5, intensity);
+        var windFactor = lerp3(0.4, 1, 2.3, intensity);
 
         for (var i = 0; i < drops.length; i++) {
           var d = drops[i];
-          d.y += d.speed * dt;
-          d.x += d.sway * dt;
+          d.y += d.speed * speedFactor * dt;
+          d.x += d.sway * windFactor * dt;
+
+          var tailX = d.x - d.sway * windFactor * 0.05;
+          var tailY = d.y - d.len;
+
+          // Soft halo pass, then a brighter core, then a tiny bright head —
+          // reads as a glossy droplet streak instead of a flat gray line.
+          ctx.beginPath();
+          ctx.moveTo(d.x, d.y);
+          ctx.lineTo(tailX, tailY);
+          ctx.strokeStyle = 'rgba(190, 215, 255, ' + (0.1 + d.weight * 0.08) + ')';
+          ctx.lineWidth = 3 + d.weight * 3;
+          ctx.stroke();
 
           ctx.beginPath();
           ctx.moveTo(d.x, d.y);
-          ctx.lineTo(d.x - d.sway * 0.05, d.y - d.len);
+          ctx.lineTo(tailX, tailY);
+          ctx.strokeStyle = 'rgba(228, 242, 255, ' + (0.55 + d.weight * 0.3) + ')';
+          ctx.lineWidth = 1 + d.weight;
           ctx.stroke();
 
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, 1 + d.weight, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(235, 247, 255, 0.55)';
+          ctx.fill();
+
           if (d.y > height) {
+            if (Math.random() < 0.35) spawnRipple(d.x, d.weight);
             d.y = -d.len - Math.random() * 40;
             d.x = Math.random() * width;
           }
@@ -393,12 +574,56 @@
           }
         }
 
+        // Condensation on the glass, drawn last (nearest the viewer) and
+        // deliberately soft-focus — close-up droplets on glass are far more
+        // out of focus than the rain falling outside.
+        ctx.filter = 'blur(1.4px)';
+        for (var c = 0; c < condensationDrops.length; c++) {
+          var cd = condensationDrops[c];
+
+          if (cd.sliding) {
+            var slideSpeed = 26 + cd.r * 3;
+            cd.y += slideSpeed * dt;
+            cd.slideProgress += slideSpeed * dt;
+            if (cd.slideProgress >= cd.slideDistance || cd.y > height) cd.sliding = false;
+          } else if (Math.random() < 0.0006) {
+            cd.sliding = true;
+            cd.slideProgress = 0;
+            cd.slideDistance = 40 + Math.random() * 120;
+          }
+
+          if (cd.y > height) {
+            cd.y = -10;
+            cd.x = Math.random() * width;
+          }
+
+          if (cd.sliding) {
+            ctx.beginPath();
+            ctx.moveTo(cd.x, cd.y - cd.slideProgress);
+            ctx.lineTo(cd.x, cd.y);
+            ctx.strokeStyle = 'rgba(200, 220, 255, 0.18)';
+            ctx.lineWidth = cd.r * 0.6;
+            ctx.stroke();
+          }
+
+          var grad = ctx.createRadialGradient(cd.x - cd.r * 0.3, cd.y - cd.r * 0.3, 0, cd.x, cd.y, cd.r);
+          grad.addColorStop(0, 'rgba(255, 255, 255, 0.55)');
+          grad.addColorStop(0.5, 'rgba(210, 225, 245, 0.28)');
+          grad.addColorStop(1, 'rgba(210, 225, 245, 0)');
+          ctx.beginPath();
+          ctx.arc(cd.x, cd.y, cd.r, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.fill();
+        }
+        ctx.filter = 'none';
+
         requestAnimationFrame(tick);
       }
 
       function startExperience() {
         startOverlay.style.display = 'none';
         muteButton.style.display = 'inline-block';
+        timerSelect.style.display = 'inline-block';
 
         audioCtx = new AudioCtx();
         masterGain = audioCtx.createGain();
@@ -429,12 +654,63 @@
         muteButton.setAttribute('aria-pressed', String(muted));
       });
 
-      // Clicking the storm itself calls down a strike. Ignored on buttons
-      // (start/mute) and rate-limited so spam-clicking can't machine-gun
-      // flashes and overlapping thunder.
-      document.addEventListener('click', function (e) {
+      // ---- Sleep timer ----
+      // There is no web API that can put a phone to sleep — the closest
+      // thing (Wake Lock) only does the opposite, keeping the screen ON.
+      // The honest equivalent is to stop everything and return to the very
+      // first screen when the timer ends, same as a fresh reload — the
+      // device can then dim/lock on its own once nothing is playing.
+      var sleepTimerId = null;
+      timerSelect.addEventListener('change', function () {
+        clearTimeout(sleepTimerId);
+        var minutes = parseInt(timerSelect.value, 10);
+        if (minutes > 0) {
+          sleepTimerId = setTimeout(function () {
+            location.reload();
+          }, minutes * 60000);
+        }
+      });
+
+      // ---- Slide up/down to make the storm wilder/calmer ----
+      var dragState = null;
+      var suppressNextClick = false;
+      var gaugeHideTimeoutId = null;
+      var DRAG_PIXELS_FOR_FULL_SWING = 260;
+
+      document.addEventListener('pointerdown', function (e) {
         if (!audioCtx) return;
-        if (e.target.closest && e.target.closest('button')) return;
+        if (e.target.closest && e.target.closest('button, select')) return;
+        clearTimeout(gaugeHideTimeoutId);
+        dragState = { startY: e.clientY, startIntensity: intensity, moved: 0 };
+      });
+
+      document.addEventListener('pointermove', function (e) {
+        if (!dragState) return;
+        var deltaY = dragState.startY - e.clientY;
+        dragState.moved = Math.max(dragState.moved, Math.abs(deltaY));
+        if (dragState.moved > 6) intensityGauge.classList.add('visible');
+        setIntensity(dragState.startIntensity + deltaY / DRAG_PIXELS_FOR_FULL_SWING);
+      });
+
+      function endDrag() {
+        if (!dragState) return;
+        if (dragState.moved > 6) suppressNextClick = true;
+        dragState = null;
+        gaugeHideTimeoutId = setTimeout(function () { intensityGauge.classList.remove('visible'); }, 600);
+      }
+      document.addEventListener('pointerup', endDrag);
+      document.addEventListener('pointercancel', endDrag);
+
+      // Clicking the storm itself calls down a strike. Ignored on buttons
+      // (start/mute/timer), after a drag just happened, and rate-limited so
+      // spam-clicking can't machine-gun overlapping flashes and thunder.
+      document.addEventListener('click', function (e) {
+        if (suppressNextClick) {
+          suppressNextClick = false;
+          return;
+        }
+        if (!audioCtx) return;
+        if (e.target.closest && e.target.closest('button, select')) return;
         if (performance.now() - lastLightningTime < 700) return;
         triggerLightning();
       });
