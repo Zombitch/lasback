@@ -71,26 +71,80 @@ function encodeWavPCM16(samples, sampleRate) {
 }
 
 /**
- * Single droplet "plink": a fast-decaying tone with a downward pitch glide,
- * plus a touch of low-passed noise for the splash transient.
+ * Single droplet impact. Real rain never sounds like the same sample
+ * replayed — every drop lands on a slightly different spot with a
+ * different size, so each call randomizes not just pitch/length but the
+ * actual timbre: the tone/noise balance, decay speed, and whether it rings
+ * with a second inharmonic partial (glassy ping) or stays a duller thud.
  */
-function synthesizeRainDrop(sampleRate) {
-  const duration = 0.15 + Math.random() * 0.08;
+function synthesizeRainDropVariant(sampleRate) {
+  const duration = 0.1 + Math.random() * 0.14;
   const n = Math.floor(duration * sampleRate);
-  const baseFreq = 900 + Math.random() * 700;
+  const baseFreq = 700 + Math.random() * 1400;
+  const toneDecay = 20 + Math.random() * 35;
+  const noiseDecay = 35 + Math.random() * 70;
+  const toneMix = 0.35 + Math.random() * 0.5;
+  const noiseMix = 1 - toneMix * 0.5;
+  const hasPartial = Math.random() < 0.5;
+  const partialRatio = 1.6 + Math.random() * 0.9;
 
   const noise = new Float64Array(n);
   for (let i = 0; i < n; i++) noise[i] = Math.random() * 2 - 1;
-  const splash = lowpassFilter(noise, sampleRate, 4000);
+  const splash = lowpassFilter(noise, sampleRate, 2200 + Math.random() * 3000);
 
   const mixed = new Float64Array(n);
   for (let i = 0; i < n; i++) {
     const t = i / sampleRate;
-    const tone = Math.sin(2 * Math.PI * baseFreq * Math.exp(-t * 8) * t) * Math.exp(-t * 35);
-    mixed[i] = tone * 0.7 + splash[i] * Math.exp(-t * 60) * 0.5;
+    let tone = Math.sin(2 * Math.PI * baseFreq * Math.exp(-t * 8) * t) * Math.exp(-t * toneDecay);
+    if (hasPartial) {
+      tone += 0.4 * Math.sin(2 * Math.PI * baseFreq * partialRatio * t) * Math.exp(-t * toneDecay * 1.8);
+    }
+    mixed[i] = tone * toneMix + splash[i] * Math.exp(-t * noiseDecay) * noiseMix;
   }
 
   return encodeWavPCM16(normalize(mixed, 0.85), sampleRate);
+}
+
+/**
+ * Continuous rain "bed": band-limited noise, seamlessly loopable, with a
+ * slow multi-sine amplitude modulation so it breathes like gusts of rain
+ * instead of sounding like a flat, static hiss. This is the layer that
+ * actually reads as "rain" — individual drop plinks are just texture on
+ * top of it, the same way real rain-ambience recordings are built.
+ */
+function synthesizeRainBed(sampleRate, durationSeconds) {
+  const n = Math.floor(durationSeconds * sampleRate);
+
+  const raw = new Float64Array(n);
+  for (let i = 0; i < n; i++) raw[i] = Math.random() * 2 - 1;
+
+  // Crossfade the tail into the head so the loop point has no seam/click.
+  const fadeLen = Math.floor(sampleRate * 0.4);
+  for (let i = 0; i < fadeLen; i++) {
+    const w = i / fadeLen;
+    const idx = n - fadeLen + i;
+    raw[idx] = raw[idx] * (1 - w) + raw[i] * w;
+  }
+
+  const bandLimited = lowpassFilter(highpassFilter(raw, sampleRate, 200), sampleRate, 4500);
+
+  const phase1 = Math.random() * Math.PI * 2;
+  const phase2 = Math.random() * Math.PI * 2;
+  const phase3 = Math.random() * Math.PI * 2;
+  const out = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = i / sampleRate;
+    // Frequencies are whole multiples of 1/duration so the modulation
+    // itself loops perfectly regardless of the noise crossfade above.
+    const modulation =
+      0.82 +
+      0.09 * Math.sin((2 * Math.PI * 1 * t) / durationSeconds + phase1) +
+      0.06 * Math.sin((2 * Math.PI * 3 * t) / durationSeconds + phase2) +
+      0.03 * Math.sin((2 * Math.PI * 7 * t) / durationSeconds + phase3);
+    out[i] = bandLimited[i] * modulation;
+  }
+
+  return encodeWavPCM16(normalize(out, 0.7), sampleRate);
 }
 
 /**
@@ -135,14 +189,29 @@ function synthesizeThunder(sampleRate) {
   return encodeWavPCM16(normalize(mixed, 0.9), sampleRate);
 }
 
+export const DROP_VARIANT_COUNT = 8;
+const RAIN_BED_DURATION_SECONDS = 6;
+
 // Generated once per server lifetime and reused for every request — an
 // unauthenticated route has no business re-running DSP synthesis per hit.
-let cachedDropWav = null;
+let cachedDropVariants = null;
+let cachedRainBedWav = null;
 let cachedThunderWav = null;
 
-export function getRainDropWav() {
-  if (!cachedDropWav) cachedDropWav = synthesizeRainDrop(SAMPLE_RATE);
-  return cachedDropWav;
+export function getRainDropVariant(index) {
+  if (!cachedDropVariants) {
+    cachedDropVariants = [];
+    for (let i = 0; i < DROP_VARIANT_COUNT; i++) {
+      cachedDropVariants.push(synthesizeRainDropVariant(SAMPLE_RATE));
+    }
+  }
+  const safeIndex = ((index % DROP_VARIANT_COUNT) + DROP_VARIANT_COUNT) % DROP_VARIANT_COUNT;
+  return cachedDropVariants[safeIndex];
+}
+
+export function getRainBedWav() {
+  if (!cachedRainBedWav) cachedRainBedWav = synthesizeRainBed(SAMPLE_RATE, RAIN_BED_DURATION_SECONDS);
+  return cachedRainBedWav;
 }
 
 export function getThunderWav() {
