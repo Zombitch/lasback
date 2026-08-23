@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cocon sous l'orage</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #05070d;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+
+    #scene {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Stormy sky outside the window */
+    #sky {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, #2a3550 0%, #131a2c 45%, #05070d 100%);
+    }
+
+    #rain-canvas {
+      position: absolute;
+      inset: 0;
+    }
+
+    #lightning-flash {
+      position: absolute;
+      inset: 0;
+      background: #eef3ff;
+      opacity: 0;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    /* The cozy cocoon: a warm vignette framing the room, contrasted with the
+       cold storm outside the "window" */
+    #cocoon-vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 100%, rgba(255, 176, 92, 0.35) 0%, rgba(255, 176, 92, 0) 55%),
+        radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 40%, rgba(5,7,13,0.85) 100%);
+    }
+
+    #caption {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 6vh;
+      text-align: center;
+      color: #ffe6c2;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+      font-size: 1.15rem;
+      letter-spacing: 0.04em;
+      padding: 0 1.5rem;
+      pointer-events: none;
+    }
+
+    #start-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+      background: rgba(5, 7, 13, 0.88);
+      color: #ffe6c2;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    #start-overlay h1 {
+      font-weight: normal;
+      font-size: 1.6rem;
+      margin: 0;
+      max-width: 32rem;
+    }
+
+    #start-button {
+      font-family: inherit;
+      font-size: 1.05rem;
+      padding: 0.75rem 1.75rem;
+      border-radius: 999px;
+      border: 1px solid #ffb05c;
+      background: rgba(255, 176, 92, 0.12);
+      color: #ffe6c2;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    #start-button:hover {
+      background: rgba(255, 176, 92, 0.28);
+    }
+
+    #mute-button {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.2rem;
+      z-index: 5;
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 230, 194, 0.4);
+      background: rgba(5, 7, 13, 0.4);
+      color: #ffe6c2;
+      cursor: pointer;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="scene">
+    <div id="sky"></div>
+    <canvas id="rain-canvas"></canvas>
+    <div id="lightning-flash"></div>
+    <div id="cocoon-vignette"></div>
+    <div id="caption">Restons dans notre cocon, pendant que le temps se déchaîne dehors.</div>
+    <button id="mute-button" type="button" aria-pressed="false">🔊 Couper le son</button>
+
+    <div id="start-overlay">
+      <h1>Un abri douillet, une tempête au dehors.</h1>
+      <button id="start-button" type="button">Entrer dans le cocon</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var canvas = document.getElementById('rain-canvas');
+      var ctx = canvas.getContext('2d');
+      var flashEl = document.getElementById('lightning-flash');
+      var startOverlay = document.getElementById('start-overlay');
+      var startButton = document.getElementById('start-button');
+      var muteButton = document.getElementById('mute-button');
+
+      var width = 0;
+      var height = 0;
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      // ---- Raindrop visual simulation ----
+      var DROP_COUNT = 220;
+      var drops = [];
+      function makeDrop() {
+        return {
+          x: Math.random() * width,
+          y: Math.random() * height,
+          len: 10 + Math.random() * 18,
+          speed: 420 + Math.random() * 380,
+          sway: (Math.random() - 0.5) * 20,
+        };
+      }
+      for (var i = 0; i < DROP_COUNT; i++) drops.push(makeDrop());
+
+      // ---- Audio (Web Audio API) ----
+      var AudioCtx = window.AudioContext || window.webkitAudioContext;
+      var audioCtx = null;
+      var dropBuffer = null;
+      var thunderBuffer = null;
+      var masterGain = null;
+      var muted = false;
+
+      function loadSound(url) {
+        return fetch(url)
+          .then(function (r) { return r.arrayBuffer(); })
+          .then(function (buf) { return audioCtx.decodeAudioData(buf); });
+      }
+
+      function playBuffer(buffer, gainValue, rate) {
+        if (!audioCtx || !buffer || muted) return;
+        var source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.playbackRate.value = rate || 1;
+        var gainNode = audioCtx.createGain();
+        gainNode.gain.value = gainValue;
+        source.connect(gainNode).connect(masterGain);
+        source.start();
+      }
+
+      function playDropSound() {
+        var rate = 0.85 + Math.random() * 0.4;
+        var gainValue = 0.05 + Math.random() * 0.12;
+        playBuffer(dropBuffer, gainValue, rate);
+      }
+
+      function playThunderSound() {
+        var gainValue = 0.5 + Math.random() * 0.4;
+        playBuffer(thunderBuffer, gainValue, 0.9 + Math.random() * 0.2);
+      }
+
+      // Only a fraction of drops reaching the bottom actually trigger a
+      // sound — otherwise hundreds of overlapping plinks turn into noise.
+      var DROP_SOUND_CHANCE = 0.06;
+
+      function triggerLightning() {
+        var flashDuration = 120 + Math.random() * 100;
+        flashEl.style.transition = 'opacity 70ms ease-out';
+        flashEl.style.opacity = 0.85;
+        setTimeout(function () {
+          flashEl.style.transition = 'opacity ' + flashDuration + 'ms ease-in';
+          flashEl.style.opacity = 0;
+        }, 70);
+
+        // Thunder lags behind the flash, like distant lightning.
+        var thunderDelay = 250 + Math.random() * 1300;
+        setTimeout(playThunderSound, thunderDelay);
+
+        scheduleNextLightning();
+      }
+
+      function scheduleNextLightning() {
+        var next = 7000 + Math.random() * 13000;
+        setTimeout(triggerLightning, next);
+      }
+
+      // ---- Animation loop ----
+      var lastTime = null;
+      function tick(timestamp) {
+        if (lastTime === null) lastTime = timestamp;
+        var dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+        lastTime = timestamp;
+
+        ctx.clearRect(0, 0, width, height);
+        ctx.strokeStyle = 'rgba(200, 220, 255, 0.5)';
+        ctx.lineWidth = 1.4;
+
+        for (var i = 0; i < drops.length; i++) {
+          var d = drops[i];
+          d.y += d.speed * dt;
+          d.x += d.sway * dt;
+
+          ctx.beginPath();
+          ctx.moveTo(d.x, d.y);
+          ctx.lineTo(d.x - d.sway * 0.05, d.y - d.len);
+          ctx.stroke();
+
+          if (d.y > height) {
+            if (Math.random() < DROP_SOUND_CHANCE) playDropSound();
+            d.y = -d.len - Math.random() * 40;
+            d.x = Math.random() * width;
+          }
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      function startExperience() {
+        startOverlay.style.display = 'none';
+        muteButton.style.display = 'inline-block';
+
+        audioCtx = new AudioCtx();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 1;
+        masterGain.connect(audioCtx.destination);
+
+        Promise.all([
+          loadSound('/tools/weather/sounds/drop.wav'),
+          loadSound('/tools/weather/sounds/thunder.wav'),
+        ]).then(function (buffers) {
+          dropBuffer = buffers[0];
+          thunderBuffer = buffers[1];
+        });
+
+        scheduleNextLightning();
+        requestAnimationFrame(tick);
+      }
+
+      startButton.addEventListener('click', function () {
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        if (!audioCtx) startExperience();
+      });
+
+      muteButton.addEventListener('click', function () {
+        muted = !muted;
+        if (masterGain) masterGain.gain.value = muted ? 0 : 1;
+        muteButton.textContent = muted ? '🔇 Activer le son' : '🔊 Couper le son';
+        muteButton.setAttribute('aria-pressed', String(muted));
+      });
+    })();
+  </script>
+</body>
+</html>

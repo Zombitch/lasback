@@ -37,6 +37,8 @@ import featureInterruptorRouter from './routes/feature-interruptor/feature-inter
 import adminFeatureInterruptorRouter from './routes/feature-interruptor/admin-feature-interruptor.route.js';
 import dashboardFeatureInterruptorRouter from './routes/feature-interruptor/dashboard-feature-interruptor.route.js';
 
+import weatherRouter from './routes/tools/weather/weather.route.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -52,6 +54,7 @@ app.set('views', [
   path.join(__dirname, 'routes/totp'),
   path.join(__dirname, 'routes/cloud-save'),
   path.join(__dirname, 'routes/feature-interruptor'),
+  path.join(__dirname, 'routes/tools/weather'),
 ]);
 
 /**
@@ -214,6 +217,12 @@ app.use('/totp', totpRouter);
 
 // Health check (JSON, no view) — no TOTP gate
 app.use('/health', healthRouter);
+
+// Weather ambience tool — intentionally public, no apiKey/origin/TOTP gate.
+// Renders a rain/thunder page with procedurally generated audio; has its
+// own dedicated rate limiter (see weather.route.js) since it's the one
+// endpoint anyone can hit without credentials.
+app.use('/tools/weather', weatherRouter);
 
 // API routes are protected by API key/origin checks and must not require TOTP
 app.use('/visit', apiKeyAuth, checkOriginAllowed, visitRouter);
