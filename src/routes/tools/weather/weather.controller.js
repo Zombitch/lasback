@@ -59,9 +59,12 @@ export function renderScene(req, res, next) {
     soundVersions[role] = getAssetVersion(ambiance.sounds[role]);
   }
 
-  const backgroundImageVersion = ambiance.backgroundImage ? getAssetVersion(ambiance.backgroundImage) : null;
+  const imageVersions = {};
+  for (const role of Object.keys(ambiance.images)) {
+    imageVersions[role] = getAssetVersion(ambiance.images[role]);
+  }
 
-  res.render('weather-scene', { ambiance, soundVersions, backgroundImageVersion });
+  res.render('weather-scene', { ambiance, soundVersions, imageVersions });
 }
 
 export function serveAmbianceSound(req, res) {
@@ -88,7 +91,9 @@ export function serveAmbianceSound(req, res) {
 
 export function serveAmbianceImage(req, res) {
   const ambiance = getAmbiance(req.params.ambianceId);
-  const filename = ambiance && ambiance.backgroundImage;
+  const role = req.params.role;
+  const hasRole = ambiance && Object.prototype.hasOwnProperty.call(ambiance.images, role);
+  const filename = hasRole ? ambiance.images[role] : null;
   if (!filename) return res.status(404).end();
 
   let buffer;

@@ -21,7 +21,7 @@ router.use(weatherLimiter);
 
 router.get('/', renderHome);
 router.get('/sounds/:ambianceId/:role.wav', serveAmbianceSound);
-router.get('/images/:ambianceId', serveAmbianceImage);
+router.get('/images/:ambianceId/:role', serveAmbianceImage);
 router.get('/:ambianceId', renderScene);
 
 export default router;

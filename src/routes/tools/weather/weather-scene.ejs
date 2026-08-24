@@ -34,18 +34,21 @@
       background: radial-gradient(ellipse at 50% 0%, <%= ambiance.skyColors[0] %> 0%, <%= ambiance.skyColors[1] %> 45%, <%= ambiance.skyColors[2] %> 100%);
     }
 
-    /* Optional background image, behind the canvas so rain/snow/wind,
-       ripples, and condensation (all drawn on that canvas) render in
-       front of it. Sits above #sky, so when no image is set this stays
-       fully transparent and the gradient shows through unchanged. The
-       tint layer pulls whatever photo lands here toward this ambiance's
-       own palette instead of looking like a pasted-in stock photo. */
-    #background-image {
+    /* Two optional image layers, purely decorative — never intercept
+       pointer events, the click/drag gestures work through them exactly
+       as if they weren't there. Empty (no backgroundImage set) means
+       fully transparent, so with neither set the plain sky gradient shows
+       through exactly as before this existed. #background-2 sits behind
+       the canvas (the weather happens in front of it); #background-1
+       sits in front of it (the weather happens behind it — a dashboard
+       silhouette, a window frame…). Either can be set without the other. */
+    .bg-layer {
       position: absolute;
       inset: 0;
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
+      pointer-events: none;
     }
 
     #weather-canvas {
@@ -254,12 +257,20 @@
   <div id="scene">
     <div id="sky"></div>
     <div
-      id="background-image"
-      <% if (ambiance.backgroundImage) { %>
-      style="background-image: linear-gradient(<%= ambiance.skyColors[1] %>66, <%= ambiance.skyColors[1] %>66), url('/tools/weather/images/<%= ambiance.id %>?v=<%= backgroundImageVersion %>');"
+      id="background-2"
+      class="bg-layer"
+      <% if (ambiance.images.background2) { %>
+      style="background-image: linear-gradient(<%= ambiance.skyColors[1] %>66, <%= ambiance.skyColors[1] %>66), url('/tools/weather/images/<%= ambiance.id %>/background2?v=<%= imageVersions.background2 %>');"
       <% } %>
     ></div>
     <canvas id="weather-canvas"></canvas>
+    <div
+      id="background-1"
+      class="bg-layer"
+      <% if (ambiance.images.background1) { %>
+      style="background-image: linear-gradient(<%= ambiance.skyColors[1] %>66, <%= ambiance.skyColors[1] %>66), url('/tools/weather/images/<%= ambiance.id %>/background1?v=<%= imageVersions.background1 %>');"
+      <% } %>
+    ></div>
     <div id="lightning-flash"></div>
     <div id="cocoon-vignette"></div>
     <div id="intensity-gauge"><div id="intensity-gauge-fill"></div></div>

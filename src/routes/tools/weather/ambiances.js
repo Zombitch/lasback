@@ -19,14 +19,19 @@
  * all of them on purpose, since "safe inside while X happens outside" is
  * the one constant.
  *
- * `backgroundImage` is optional, same silent-until-provided pattern as
- * `sounds` — null means the plain sky gradient shows through (today's
- * look), unchanged. When set, it's a filename in ./assets (webp/jpg/png)
- * shown behind the canvas — rain/snow/wind, ripples, and condensation are
- * all drawn on that canvas, so they render in front of it automatically.
- * The scene view also tints it with this ambiance's own mid sky color, so
- * a dropped-in photo gets pulled toward the existing palette instead of
- * clashing with it.
+ * `images.background1` / `images.background2` are optional, same
+ * silent-until-provided pattern as `sounds` — an ambiance with no `images`
+ * at all just shows the plain sky gradient (today's look), unchanged.
+ * Both are filenames in ./assets (webp/jpg/png). Stacking order back to
+ * front is: sky gradient -> background2 -> canvas (rain/snow/wind,
+ * puddle ripples, the lightning bolt, and window condensation are ALL
+ * drawn on that one canvas) -> background1 -> lightning flash / vignette
+ * / UI. So background2 is the distant backdrop the weather happens in
+ * front of, and background1 is a near/foreground element (a dashboard
+ * silhouette, a window frame…) that the weather happens behind. Either
+ * can be set without the other. The scene view tints both with this
+ * ambiance's own mid sky color, so a dropped-in photo gets pulled toward
+ * the existing palette instead of clashing with it.
  */
 export const ambiances = {
   'car-rain': {
@@ -37,7 +42,7 @@ export const ambiances = {
     particleType: 'rain',
     hasLightning: true,
     skyColors: ['#2a3550', '#131a2c', '#05070d'],
-    backgroundImage: null,
+    images: {},
     sounds: {
       loop: 'rain-fx-inside-car.wav',
       accent: 'boomy-thunder-shock.wav',
@@ -51,7 +56,7 @@ export const ambiances = {
     particleType: 'snow',
     hasLightning: true,
     skyColors: ['#3a4a68', '#1c2438', '#05070d'],
-    backgroundImage: null,
+    images: {},
     sounds: {},
   },
   'forest-rain': {
@@ -62,7 +67,7 @@ export const ambiances = {
     particleType: 'rain',
     hasLightning: true,
     skyColors: ['#2a3a2e', '#16241a', '#05070d'],
-    backgroundImage: null,
+    images: {},
     sounds: {},
   },
   'desert-wind': {
@@ -73,7 +78,7 @@ export const ambiances = {
     particleType: 'wind',
     hasLightning: true,
     skyColors: ['#2a3040', '#181c28', '#05070d'],
-    backgroundImage: null,
+    images: {},
     sounds: {},
   },
 };
