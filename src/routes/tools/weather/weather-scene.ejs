@@ -327,6 +327,7 @@
         <button id="menu-button" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Menu">⋮</button>
         <div id="menu-dropdown" role="menu">
           <button id="menu-eyes" type="button" role="menuitem">🌙 Fermer les yeux</button>
+          <button id="menu-fullscreen" type="button" role="menuitem">⛶ Plein écran</button>
           <a id="menu-ambiances" href="/tools/weather" role="menuitem">🏠 Ambiances</a>
         </div>
       </div>
@@ -365,6 +366,7 @@
       var menuButton = document.getElementById('menu-button');
       var menuDropdown = document.getElementById('menu-dropdown');
       var menuEyes = document.getElementById('menu-eyes');
+      var menuFullscreen = document.getElementById('menu-fullscreen');
 
       // ---- Top-right ⋮ menu ----
       function closeMenu() {
@@ -969,6 +971,23 @@
         closeMenu();
         enterClosedEyes();
       });
+
+      // ---- Fullscreen toggle ----
+      if (!document.documentElement.requestFullscreen) {
+        menuFullscreen.style.display = 'none';
+      } else {
+        menuFullscreen.addEventListener('click', function () {
+          closeMenu();
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else {
+            document.documentElement.requestFullscreen().catch(function () {});
+          }
+        });
+        document.addEventListener('fullscreenchange', function () {
+          menuFullscreen.textContent = document.fullscreenElement ? '⛶ Quitter le plein écran' : '⛶ Plein écran';
+        });
+      }
 
       // The overlay's own tap handles the exit; it also marks the click as
       // "handled" so the same tap doesn't bubble up and get treated as a
