@@ -197,7 +197,6 @@
       display: none;
     }
 
-    #eyes-button,
     #cast-button {
       font-family: inherit;
       font-size: 0.9rem;
@@ -208,6 +207,56 @@
       color: #ffe6c2;
       cursor: pointer;
       display: none;
+    }
+
+    #menu-wrapper {
+      position: relative;
+    }
+    #menu-button {
+      font-family: inherit;
+      font-size: 0.9rem;
+      line-height: 1;
+      padding: 0.4rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 230, 194, 0.4);
+      background: rgba(5, 7, 13, 0.4);
+      color: #ffe6c2;
+      cursor: pointer;
+    }
+    #menu-dropdown {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      min-width: 10rem;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      border-radius: 0.9rem;
+      border: 1px solid rgba(255, 230, 194, 0.4);
+      background: rgba(5, 7, 13, 0.92);
+      backdrop-filter: blur(6px);
+      z-index: 6;
+    }
+    #menu-dropdown.open {
+      display: flex;
+    }
+    #menu-dropdown a,
+    #menu-dropdown button {
+      font-family: inherit;
+      font-size: 0.9rem;
+      text-align: left;
+      padding: 0.65rem 0.9rem;
+      border: none;
+      background: none;
+      color: #ffe6c2;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    #menu-dropdown a:hover,
+    #menu-dropdown button:hover,
+    #menu-dropdown a:focus-visible,
+    #menu-dropdown button:focus-visible {
+      background: rgba(255, 230, 194, 0.12);
     }
 
     /* Opaque, sits above everything (including #controls) so nothing is
@@ -274,7 +323,13 @@
       </select>
       <button id="cast-button" type="button">📺 </button>
       <span id="timer-remaining" aria-live="polite"></span>
-      <button id="eyes-button" type="button">🌙</button>
+      <div id="menu-wrapper">
+        <button id="menu-button" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Menu">⋮</button>
+        <div id="menu-dropdown" role="menu">
+          <button id="menu-eyes" type="button" role="menuitem">🌙 Fermer les yeux</button>
+          <a id="menu-ambiances" href="/tools/weather" role="menuitem">🏠 Ambiances</a>
+        </div>
+      </div>
     </div>
 
     <div id="start-overlay">
@@ -304,10 +359,26 @@
       var timerRemaining = document.getElementById('timer-remaining');
       var intensityGauge = document.getElementById('intensity-gauge');
       var intensityGaugeFill = document.getElementById('intensity-gauge-fill');
-      var eyesButton = document.getElementById('eyes-button');
       var closedEyesOverlay = document.getElementById('closed-eyes-overlay');
       var closedEyesHint = document.getElementById('closed-eyes-hint');
       var castButton = document.getElementById('cast-button');
+      var menuButton = document.getElementById('menu-button');
+      var menuDropdown = document.getElementById('menu-dropdown');
+      var menuEyes = document.getElementById('menu-eyes');
+
+      // ---- Top-right ⋮ menu ----
+      function closeMenu() {
+        menuDropdown.classList.remove('open');
+        menuButton.setAttribute('aria-expanded', 'false');
+      }
+      menuButton.addEventListener('click', function (event) {
+        event.stopPropagation();
+        var open = menuDropdown.classList.toggle('open');
+        menuButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      document.addEventListener('click', function (event) {
+        if (!menuDropdown.contains(event.target) && event.target !== menuButton) closeMenu();
+      });
 
       // ---- Cast to TV ----
       // Uses the standard Presentation API rather than the Google Cast SDK,
@@ -838,7 +909,6 @@
       function startExperience() {
         startOverlay.style.display = 'none';
         timerSelect.style.display = 'inline-block';
-        eyesButton.style.display = 'inline-block';
         //if (presentationRequest) castButton.style.display = 'inline-block';
 
         audioCtx = new AudioCtx();
@@ -895,7 +965,10 @@
         animationFrameId = requestAnimationFrame(tick);
       }
 
-      eyesButton.addEventListener('click', enterClosedEyes);
+      menuEyes.addEventListener('click', function () {
+        closeMenu();
+        enterClosedEyes();
+      });
 
       // The overlay's own tap handles the exit; it also marks the click as
       // "handled" so the same tap doesn't bubble up and get treated as a
