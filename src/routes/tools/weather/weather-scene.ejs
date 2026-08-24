@@ -36,11 +36,11 @@
 
     /* Two optional image layers, purely decorative — never intercept
        pointer events, the click/drag gestures work through them exactly
-       as if they weren't there. Empty (no backgroundImage set) means
-       fully transparent, so with neither set the plain sky gradient shows
-       through exactly as before this existed. #background-2 sits behind
-       the canvas (the weather happens in front of it); #background-1
-       sits in front of it (the weather happens behind it — a dashboard
+       as if they weren't there. Empty (no image set) means fully
+       transparent, so with neither set the plain sky gradient shows
+       through exactly as before this existed. #background sits behind
+       the canvas (the weather happens in front of it); #foreground sits
+       in front of it (the weather happens behind it — a dashboard
        silhouette, a window frame…). Either can be set without the other. */
     .bg-layer {
       position: absolute;
@@ -257,18 +257,18 @@
   <div id="scene">
     <div id="sky"></div>
     <div
-      id="background-2"
+      id="background"
       class="bg-layer"
-      <% if (ambiance.images.background2) { %>
-      style="background-image: linear-gradient(<%= ambiance.skyColors[1] %>66, <%= ambiance.skyColors[1] %>66), url('/tools/weather/images/<%= ambiance.id %>/background2?v=<%= imageVersions.background2 %>');"
+      <% if (ambiance.images.background) { %>
+      style="background-image: linear-gradient(<%= ambiance.skyColors[1] %>66, <%= ambiance.skyColors[1] %>66), url('/tools/weather/images/<%= ambiance.id %>/background?v=<%= imageVersions.background %>');"
       <% } %>
     ></div>
     <canvas id="weather-canvas"></canvas>
     <div
-      id="background-1"
+      id="foreground"
       class="bg-layer"
-      <% if (ambiance.images.background1) { %>
-      style="background-image: linear-gradient(<%= ambiance.skyColors[1] %>66, <%= ambiance.skyColors[1] %>66), url('/tools/weather/images/<%= ambiance.id %>/background1?v=<%= imageVersions.background1 %>');"
+      <% if (ambiance.images.foreground) { %>
+      style="background-image: linear-gradient(<%= ambiance.skyColors[1] %>66, <%= ambiance.skyColors[1] %>66), url('/tools/weather/images/<%= ambiance.id %>/foreground?v=<%= imageVersions.foreground %>');"
       <% } %>
     ></div>
     <div id="lightning-flash"></div>

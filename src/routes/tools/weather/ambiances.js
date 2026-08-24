@@ -19,17 +19,17 @@
  * all of them on purpose, since "safe inside while X happens outside" is
  * the one constant.
  *
- * `images.background1` / `images.background2` are optional, same
+ * `images.background` / `images.foreground` are optional, same
  * silent-until-provided pattern as `sounds` — an ambiance with no `images`
  * at all just shows the plain sky gradient (today's look), unchanged.
  * Both are filenames in ./assets (webp/jpg/png). Stacking order back to
- * front is: sky gradient -> background2 -> canvas (rain/snow/wind,
+ * front is: sky gradient -> background -> canvas (rain/snow/wind,
  * puddle ripples, the lightning bolt, and window condensation are ALL
- * drawn on that one canvas) -> background1 -> lightning flash / vignette
- * / UI. So background2 is the distant backdrop the weather happens in
- * front of, and background1 is a near/foreground element (a dashboard
- * silhouette, a window frame…) that the weather happens behind. Either
- * can be set without the other. The scene view tints both with this
+ * drawn on that one canvas) -> foreground -> lightning flash / vignette
+ * / UI. So `background` is the distant backdrop the weather happens in
+ * front of, and `foreground` is a near element (a dashboard silhouette,
+ * a window frame…) that the weather happens behind. Either can be set
+ * without the other. The scene view tints both with this
  * ambiance's own mid sky color, so a dropped-in photo gets pulled toward
  * the existing palette instead of clashing with it.
  */
