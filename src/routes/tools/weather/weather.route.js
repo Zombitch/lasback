@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { renderHome, renderScene, serveAmbianceSound } from './weather.controller.js';
+import { renderHome, renderScene, serveAmbianceSound, serveAmbianceImage } from './weather.controller.js';
 
 const router = Router();
 
@@ -21,6 +21,7 @@ router.use(weatherLimiter);
 
 router.get('/', renderHome);
 router.get('/sounds/:ambianceId/:role.wav', serveAmbianceSound);
+router.get('/images/:ambianceId', serveAmbianceImage);
 router.get('/:ambianceId', renderScene);
 
 export default router;

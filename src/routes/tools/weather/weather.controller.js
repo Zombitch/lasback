@@ -7,19 +7,23 @@ import { getAmbiance, listAmbiances } from './ambiances.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ASSETS_DIR = path.join(__dirname, 'assets');
 
-const WAV_CACHE_HEADERS = {
-  'Content-Type': 'audio/wav',
-  // Safe to cache aggressively/indefinitely because the URL is versioned
-  // (?v=<mtime>) — swapping the underlying file changes the URL the view
-  // requests, so browsers never serve a stale asset from a previous deploy.
-  'Cache-Control': 'public, max-age=31536000, immutable',
+const IMAGE_CONTENT_TYPES = {
+  '.webp': 'image/webp',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
 };
+
+// Safe to cache aggressively/indefinitely because the URL is versioned
+// (?v=<mtime>) — swapping the underlying file changes the URL the view
+// requests, so browsers never serve a stale asset from a previous deploy.
+const LONG_CACHE_CONTROL = 'public, max-age=31536000, immutable';
 
 // Read once per server lifetime and reused for every request — no reason
 // to hit disk on every hit of an unauthenticated route.
 const assetCache = new Map();
 
-function loadWavAsset(filename) {
+function loadAsset(filename) {
   if (assetCache.has(filename)) return assetCache.get(filename);
 
   const filePath = path.join(ASSETS_DIR, filename);
@@ -55,7 +59,9 @@ export function renderScene(req, res, next) {
     soundVersions[role] = getAssetVersion(ambiance.sounds[role]);
   }
 
-  res.render('weather-scene', { ambiance, soundVersions });
+  const backgroundImageVersion = ambiance.backgroundImage ? getAssetVersion(ambiance.backgroundImage) : null;
+
+  res.render('weather-scene', { ambiance, soundVersions, backgroundImageVersion });
 }
 
 export function serveAmbianceSound(req, res) {
@@ -67,7 +73,7 @@ export function serveAmbianceSound(req, res) {
 
   let buffer;
   try {
-    buffer = loadWavAsset(filename);
+    buffer = loadAsset(filename);
   } catch (err) {
     logger.error({ err, filename }, '[WEATHER] Missing/unreadable audio asset');
     return res.status(503).json({
@@ -76,6 +82,27 @@ export function serveAmbianceSound(req, res) {
     });
   }
 
-  res.set(WAV_CACHE_HEADERS);
+  res.set({ 'Content-Type': 'audio/wav', 'Cache-Control': LONG_CACHE_CONTROL });
+  res.send(buffer);
+}
+
+export function serveAmbianceImage(req, res) {
+  const ambiance = getAmbiance(req.params.ambianceId);
+  const filename = ambiance && ambiance.backgroundImage;
+  if (!filename) return res.status(404).end();
+
+  let buffer;
+  try {
+    buffer = loadAsset(filename);
+  } catch (err) {
+    logger.error({ err, filename }, '[WEATHER] Missing/unreadable background image asset');
+    return res.status(503).json({
+      success: false,
+      message: 'Background image asset is not available on this server.',
+    });
+  }
+
+  const contentType = IMAGE_CONTENT_TYPES[path.extname(filename).toLowerCase()] || 'application/octet-stream';
+  res.set({ 'Content-Type': contentType, 'Cache-Control': LONG_CACHE_CONTROL });
   res.send(buffer);
 }
