@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { renderWeather, serveRainSound, serveThunderSound } from './weather.controller.js';
+import { renderHome, renderScene, serveAmbianceSound } from './weather.controller.js';
 
 const router = Router();
 
@@ -9,8 +9,6 @@ const router = Router();
  * It's the one endpoint anyone can hit with no credentials, so it gets its own
  * limiter instead of sharing the app-wide one — a spammer here shouldn't be
  * able to eat into the quota legitimate API callers share on the same IP.
- * Serving is just two cached static files now (no per-request synthesis), so
- * this mainly guards against pointless bandwidth abuse rather than CPU cost.
  */
 const weatherLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
@@ -21,8 +19,8 @@ const weatherLimiter = rateLimit({
 
 router.use(weatherLimiter);
 
-router.get('/', renderWeather);
-router.get('/sounds/rain.wav', serveRainSound);
-router.get('/sounds/thunder.wav', serveThunderSound);
+router.get('/', renderHome);
+router.get('/sounds/:ambianceId/:role.wav', serveAmbianceSound);
+router.get('/:ambianceId', renderScene);
 
 export default router;

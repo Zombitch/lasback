@@ -2,19 +2,16 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { logger } from '../../../utils/logger.js';
+import { getAmbiance, listAmbiances } from './ambiances.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ASSETS_DIR = path.join(__dirname, 'assets');
 
-const RAIN_LOOP_FILE = 'rain-fx-inside-car.wav';
-const THUNDER_FILE = 'boomy-thunder-shock.wav';
-
 const WAV_CACHE_HEADERS = {
   'Content-Type': 'audio/wav',
   // Safe to cache aggressively/indefinitely because the URL is versioned
-  // below (?v=<mtime>) — swapping the underlying file changes the URL the
-  // view requests, so browsers never serve a stale asset from a previous
-  // deploy under the old URL.
+  // (?v=<mtime>) — swapping the underlying file changes the URL the view
+  // requests, so browsers never serve a stale asset from a previous deploy.
   'Cache-Control': 'public, max-age=31536000, immutable',
 };
 
@@ -45,7 +42,29 @@ function getAssetVersion(filename) {
   }
 }
 
-function serveWavAsset(filename, res) {
+export function renderHome(req, res) {
+  res.render('weather-home', { ambiances: listAmbiances() });
+}
+
+export function renderScene(req, res, next) {
+  const ambiance = getAmbiance(req.params.ambianceId);
+  if (!ambiance) return next();
+
+  const soundVersions = {};
+  for (const role of Object.keys(ambiance.sounds)) {
+    soundVersions[role] = getAssetVersion(ambiance.sounds[role]);
+  }
+
+  res.render('weather-scene', { ambiance, soundVersions });
+}
+
+export function serveAmbianceSound(req, res) {
+  const ambiance = getAmbiance(req.params.ambianceId);
+  const role = req.params.role;
+  const hasRole = ambiance && Object.prototype.hasOwnProperty.call(ambiance.sounds, role);
+  const filename = hasRole ? ambiance.sounds[role] : null;
+  if (!filename) return res.status(404).end();
+
   let buffer;
   try {
     buffer = loadWavAsset(filename);
@@ -59,19 +78,4 @@ function serveWavAsset(filename, res) {
 
   res.set(WAV_CACHE_HEADERS);
   res.send(buffer);
-}
-
-export function renderWeather(req, res) {
-  res.render('weather', {
-    rainVersion: getAssetVersion(RAIN_LOOP_FILE),
-    thunderVersion: getAssetVersion(THUNDER_FILE),
-  });
-}
-
-export function serveRainSound(req, res) {
-  serveWavAsset(RAIN_LOOP_FILE, res);
-}
-
-export function serveThunderSound(req, res) {
-  serveWavAsset(THUNDER_FILE, res);
 }

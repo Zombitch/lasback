@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Choisir une ambiance</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: #05070d;
+      font-family: Georgia, 'Times New Roman', serif;
+      color: #ffe6c2;
+    }
+
+    #page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      padding: 3rem 1.5rem;
+    }
+
+    h1 {
+      font-weight: normal;
+      font-size: 1.6rem;
+      text-align: center;
+      margin: 0;
+      max-width: 32rem;
+    }
+
+    #cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1rem;
+      width: 100%;
+      max-width: 60rem;
+    }
+
+    .card {
+      display: block;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 230, 194, 0.25);
+      padding: 1.5rem 1.25rem;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    }
+    .card:hover,
+    .card:focus-visible {
+      border-color: rgba(255, 176, 92, 0.7);
+      transform: translateY(-2px);
+    }
+
+    .card h2 {
+      font-weight: normal;
+      font-size: 1.15rem;
+      margin: 0 0 0.5rem;
+      color: #ffb05c;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: 0.9rem;
+      opacity: 0.8;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div id="page">
+    <h1>Choisis une ambiance, entre dans ton cocon.</h1>
+
+    <div id="cards">
+      <% ambiances.forEach(function (ambiance) { %>
+        <a class="card" href="/tools/weather/<%= ambiance.id %>">
+          <h2><%= ambiance.name %></h2>
+          <p><%= ambiance.cardText %></p>
+        </a>
+      <% }); %>
+    </div>
+  </div>
+</body>
+</html>
