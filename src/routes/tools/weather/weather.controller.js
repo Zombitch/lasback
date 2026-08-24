@@ -47,7 +47,8 @@ function getAssetVersion(filename) {
 }
 
 export function renderHome(req, res) {
-  res.render('weather-home', { ambiances: listAmbiances() });
+  const ambiances = listAmbiances().filter((ambiance) => ambiance.id === 'forest-rain');
+  res.render('weather-home', { ambiances });
 }
 
 export function renderScene(req, res, next) {

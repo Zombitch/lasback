@@ -172,20 +172,6 @@
       gap: 0.5rem;
     }
 
-    #change-ambiance {
-      font-family: inherit;
-      font-size: 0.8rem;
-      color: #ffe6c2;
-      opacity: 0.55;
-      text-decoration: none;
-      padding: 0.3rem 0.4rem;
-      transition: opacity 0.2s ease;
-    }
-    #change-ambiance:hover,
-    #change-ambiance:focus-visible {
-      opacity: 0.9;
-    }
-
     #timer-select {
       font-family: inherit;
       font-size: 0.85rem;
@@ -211,7 +197,8 @@
       display: none;
     }
 
-    #eyes-button {
+    #eyes-button,
+    #cast-button {
       font-family: inherit;
       font-size: 0.9rem;
       padding: 0.4rem 0.9rem;
@@ -277,8 +264,6 @@
     <div id="caption"><%= ambiance.caption %></div>
 
     <div id="controls">
-      <a id="change-ambiance" href="/tools/weather">🔄 Ambiances</a>
-      <span id="timer-remaining" aria-live="polite"></span>
       <select id="timer-select" aria-label="Minuterie">
         <option value="0">Pas de minuterie</option>
         <option value="1">1 min</option>
@@ -287,7 +272,9 @@
         <option value="45">45 min</option>
         <option value="60">60 min</option>
       </select>
-      <button id="eyes-button" type="button">🌙 Fermer les yeux</button>
+      <button id="cast-button" type="button">📺 </button>
+      <span id="timer-remaining" aria-live="polite"></span>
+      <button id="eyes-button" type="button">🌙</button>
     </div>
 
     <div id="start-overlay">
@@ -320,6 +307,29 @@
       var eyesButton = document.getElementById('eyes-button');
       var closedEyesOverlay = document.getElementById('closed-eyes-overlay');
       var closedEyesHint = document.getElementById('closed-eyes-hint');
+      var castButton = document.getElementById('cast-button');
+
+      // ---- Cast to TV ----
+      // Uses the standard Presentation API rather than the Google Cast SDK,
+      // so casting this page works with any Presentation-capable receiver
+      // (Chromecast included) without pulling in an external script. Not
+      // supported everywhere (e.g. no Chromecast on the network, non-Chrome
+      // browsers), so the button only appears once a request can be built.
+      var presentationRequest = null;
+      if (window.PresentationRequest) {
+        try {
+          presentationRequest = new PresentationRequest([window.location.href]);
+          navigator.presentation.defaultRequest = presentationRequest;
+        } catch (err) {
+          presentationRequest = null;
+        }
+      }
+      castButton.addEventListener('click', function () {
+        if (!presentationRequest) return;
+        presentationRequest.start().catch(function (err) {
+          console.error('[WEATHER] Cast failed', err);
+        });
+      });
 
       var width = 0;
       var height = 0;
@@ -829,6 +839,7 @@
         startOverlay.style.display = 'none';
         timerSelect.style.display = 'inline-block';
         eyesButton.style.display = 'inline-block';
+        if (presentationRequest) castButton.style.display = 'inline-block';
 
         audioCtx = new AudioCtx();
         masterGain = audioCtx.createGain();

@@ -42,7 +42,10 @@ export const ambiances = {
     particleType: 'rain',
     hasLightning: true,
     skyColors: ['#2a3550', '#131a2c', '#05070d'],
-    images: {},
+    images: {
+      background: 'forest-background.png',
+      foreground: 'forest-foreground.png',
+    },
     sounds: {
       loop: 'rain-fx-inside-car.wav',
       accent: 'boomy-thunder-shock.wav',
@@ -67,8 +70,14 @@ export const ambiances = {
     particleType: 'rain',
     hasLightning: true,
     skyColors: ['#2a3a2e', '#16241a', '#05070d'],
-    images: {},
-    sounds: {},
+    images: {
+      background: 'forest-background.png',
+      foreground: 'forest-foreground.png',
+    },
+    sounds: {
+      loop: 'rain-fx-inside-car.wav',
+      accent: 'boomy-thunder-shock.wav',
+    },
   },
   'desert-wind': {
     id: 'desert-wind',
