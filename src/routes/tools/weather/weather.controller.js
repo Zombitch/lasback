@@ -47,7 +47,7 @@ function getAssetVersion(filename) {
 }
 
 export function renderHome(req, res) {
-  const ambiances = listAmbiances().filter((ambiance) => ambiance.id === 'forest-rain');
+  const ambiances = listAmbiances().filter((ambiance) => ['car-rain', 'forest-rain'].includes(ambiance.id));
   res.render('weather-home', { ambiances });
 }
 

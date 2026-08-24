@@ -43,8 +43,8 @@ export const ambiances = {
     hasLightning: true,
     skyColors: ['#2a3550', '#131a2c', '#05070d'],
     images: {
-      background: 'forest-background.png',
-      foreground: 'forest-foreground.png',
+      background: 'car-background.png',
+      foreground: 'car-foreground.png',
     },
     sounds: {
       loop: 'rain-fx-inside-car.wav',
