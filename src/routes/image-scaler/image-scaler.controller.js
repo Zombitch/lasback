@@ -2,8 +2,8 @@ import crypto from 'crypto';
 import multer from 'multer';
 import sharp from 'sharp';
 
-const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
-const MAX_DIMENSION = 4096; // px, per side, applies to the uploaded image
+const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
+const MAX_DIMENSION = 4096 * 5; // 20480px, per side, applies to the uploaded image
 const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const ROWS_PER_CHUNK = 64; // pixel rows processed between progress events
 const JOB_TTL_MS = 5 * 60 * 1000; // abandoned jobs are swept after 5 min
