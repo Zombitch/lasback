@@ -37,6 +37,8 @@ import featureInterruptorRouter from './routes/feature-interruptor/feature-inter
 import adminFeatureInterruptorRouter from './routes/feature-interruptor/admin-feature-interruptor.route.js';
 import dashboardFeatureInterruptorRouter from './routes/feature-interruptor/dashboard-feature-interruptor.route.js';
 
+import imageScalerRouter from './routes/image-scaler/image-scaler.route.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -52,6 +54,7 @@ app.set('views', [
   path.join(__dirname, 'routes/totp'),
   path.join(__dirname, 'routes/cloud-save'),
   path.join(__dirname, 'routes/feature-interruptor'),
+  path.join(__dirname, 'routes/image-scaler'),
 ]);
 
 /**
@@ -214,6 +217,10 @@ app.use('/totp', totpRouter);
 
 // Health check (JSON, no view) — no TOTP gate
 app.use('/health', healthRouter);
+
+// Image scaler — intentionally public: no apiKeyAuth/checkOriginAllowed/totpAuth.
+// Requested as an unprotected route; see PR description for the tradeoffs.
+app.use('/image-scaler', imageScalerRouter);
 
 // API routes are protected by API key/origin checks and must not require TOTP
 app.use('/visit', apiKeyAuth, checkOriginAllowed, visitRouter);

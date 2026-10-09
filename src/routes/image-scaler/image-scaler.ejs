@@ -1,0 +1,137 @@
+<%- include('../partials/header') %>
+
+<div class="content">
+
+  <div class="dashboard-header">
+    <p class="dashboard-kicker section-label">Image Scaler</p>
+    <h1>Agrandisseur de pixels</h1>
+    <p class="dashboard-sub">
+      Chaque pixel de l'image est dupliqué en un bloc 2x2 de la même couleur
+      (la taille double en largeur et en hauteur). Formats acceptés : PNG, JPEG, WebP
+      — <%= maxFileSizeMb %>MB max, <%= maxDimension %>x<%= maxDimension %>px max.
+    </p>
+    <a href="/" class="back-link">&larr; Retour à l'accueil</a>
+  </div>
+
+  <div class="scaler-card">
+    <label for="scaler-file" class="scaler-dropzone" id="scaler-dropzone">
+      <span id="scaler-dropzone-text">Cliquer pour choisir une image&hellip;</span>
+    </label>
+    <input type="file" id="scaler-file" accept="image/png,image/jpeg,image/webp" hidden />
+
+    <div class="scaler-actions">
+      <button type="button" id="scaler-btn" class="fi-btn fi-btn-create" disabled>Scaler l'image</button>
+      <span id="scaler-meta" class="scaler-meta"></span>
+    </div>
+
+    <div class="scaler-progress-track" id="scaler-progress-track" style="display:none">
+      <div class="scaler-progress-fill" id="scaler-progress-fill"></div>
+    </div>
+    <p id="scaler-status" class="scaler-status"></p>
+    <p id="scaler-error" class="fi-error" style="display:none"></p>
+
+    <div id="scaler-result" class="scaler-result" style="display:none">
+      <img id="scaler-result-img" alt="Image scalée" />
+      <a id="scaler-download-link" class="fi-btn fi-btn-create" download>Télécharger</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const fileInput = document.getElementById('scaler-file');
+  const dropzoneText = document.getElementById('scaler-dropzone-text');
+  const scaleBtn = document.getElementById('scaler-btn');
+  const metaEl = document.getElementById('scaler-meta');
+  const progressTrack = document.getElementById('scaler-progress-track');
+  const progressFill = document.getElementById('scaler-progress-fill');
+  const statusEl = document.getElementById('scaler-status');
+  const errorEl = document.getElementById('scaler-error');
+  const resultEl = document.getElementById('scaler-result');
+  const resultImg = document.getElementById('scaler-result-img');
+  const downloadLink = document.getElementById('scaler-download-link');
+
+  function showError(message) {
+    errorEl.textContent = message;
+    errorEl.style.display = 'block';
+  }
+
+  function resetUiForNewRun() {
+    errorEl.style.display = 'none';
+    resultEl.style.display = 'none';
+    progressTrack.style.display = 'none';
+    progressFill.style.width = '0%';
+    statusEl.textContent = '';
+  }
+
+  fileInput.addEventListener('change', () => {
+    resetUiForNewRun();
+    const file = fileInput.files[0];
+    if (!file) {
+      scaleBtn.disabled = true;
+      dropzoneText.textContent = 'Cliquer pour choisir une image…';
+      metaEl.textContent = '';
+      return;
+    }
+    scaleBtn.disabled = false;
+    dropzoneText.textContent = file.name;
+    metaEl.textContent = `${(file.size / 1024).toFixed(0)} Ko`;
+  });
+
+  scaleBtn.addEventListener('click', async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    resetUiForNewRun();
+    scaleBtn.disabled = true;
+    statusEl.textContent = 'Envoi de l\'image…';
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    let uploadData;
+    try {
+      const uploadRes = await fetch('/image-scaler/upload', { method: 'POST', body: formData });
+      uploadData = await uploadRes.json();
+      if (!uploadRes.ok || !uploadData.success) {
+        showError(uploadData.message || 'Échec de l\'envoi');
+        scaleBtn.disabled = false;
+        return;
+      }
+    } catch {
+      showError('Échec de l\'envoi');
+      scaleBtn.disabled = false;
+      return;
+    }
+
+    const { jobId, width, height } = uploadData;
+    progressTrack.style.display = 'block';
+    statusEl.textContent = `Scaling ${width}x${height} → ${width * 2}x${height * 2}…`;
+
+    const es = new EventSource(`/image-scaler/scale/${jobId}`);
+
+    es.addEventListener('progress', (e) => {
+      const { percent } = JSON.parse(e.data);
+      progressFill.style.width = percent + '%';
+    });
+
+    es.addEventListener('done', (e) => {
+      const done = JSON.parse(e.data);
+      es.close();
+      resultImg.src = `/image-scaler/download/${done.jobId}`;
+      downloadLink.href = `/image-scaler/download/${done.jobId}?download=1`;
+      resultEl.style.display = 'block';
+      statusEl.textContent = `Terminé — ${done.width}x${done.height}`;
+      scaleBtn.disabled = false;
+    });
+
+    es.addEventListener('error', () => {
+      es.close();
+      showError('Le scaling a échoué');
+      statusEl.textContent = '';
+      scaleBtn.disabled = false;
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>
